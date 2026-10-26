@@ -54,17 +54,17 @@ public partial class MainWindow : Window
         RangeMinBox.Text=selected.Minimum.ToString("R",CultureInfo.InvariantCulture);
         RangeMaxBox.Text=selected.Maximum.ToString("R",CultureInfo.InvariantCulture);
         EquationColorBox.SelectedItem=CurvePalette.FirstOrDefault(p=>p.Hex.Equals(selected.Color,StringComparison.OrdinalIgnoreCase))??CurvePalette[4];
-        EquationStatus.Text="Modifica i campi e premi Salva modifiche.";
-        SaveCurveButton.Content="Salva modifiche";
+        EquationStatus.Text=I18n.T("Modifica i campi e premi Salva modifiche.");
+        SaveCurveButton.Content=I18n.T("Salva modifiche");
     }
     private void RemoveCurveClicked(object sender,RoutedEventArgs e)
     {
         if(CurveGrid.SelectedItem is not CurveDefinition selected)return;
         if(ReferenceEquals(_editingCurve,selected))_editingCurve=null;
         _curveDefinitions.Remove(selected);
-        SaveCurveButton.Content="+ Aggiungi";
+        SaveCurveButton.Content=I18n.T("+ Aggiungi");
         RebuildCurves();
-        EquationStatus.Text="Curva rimossa.";
+        EquationStatus.Text=I18n.T("Curva rimossa.");
     }
     private readonly List<Segment> _segments=new();
     private readonly List<Caption> _labels=new();
@@ -78,6 +78,9 @@ public partial class MainWindow : Window
         _vectors.Add(new VectorItem{Name="v",Components="-2; 3",Color="#2563EB"});
         foreach(var v in _vectors) v.PropertyChanged+=VectorChanged;
         Matrices.DrawResultRequested+=ImportMatrixVectors;
+        var defaultLanguage=I18n.Language;
+        foreach(var option in LanguageBox.Items.OfType<ComboBoxItem>())
+            if((string?)option.Tag==defaultLanguage){LanguageBox.SelectedItem=option;break;}
         _ready=true; LoadLastProject(); I18n.TranslateTree(MainTabs); Matrices.SetLanguage(); Render();
     }
     private static readonly string[] MatrixVectorColors=
@@ -229,7 +232,7 @@ public partial class MainWindow : Window
     {
         foreach(var v in _vectors)v.PropertyChanged-=VectorChanged;
         _vectors.Clear();_curves.Clear();_curveDefinitions.Clear();_editingCurve=null;SaveCurveButton.Content="+ Aggiungi";Render();
-        Status.Text="Canvas ripulito.";
+        Status.Text=I18n.T("Canvas ripulito.");
     }
     private static void PlotImplicitSurface(EquationEngine expression,double min,double max,Action<double,double,double,double,double,double> add)
     {
