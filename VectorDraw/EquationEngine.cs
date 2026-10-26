@@ -14,9 +14,9 @@ public sealed class EquationEngine
         _evaluate=ParseExpression();
         if(_pos!=_source.Length)throw new FormatException("Simbolo inatteso alla posizione "+(_pos+1));
     }
-    public double Evaluate(double x=0,double y=0,double z=0)
+    public double Evaluate(double x=0,double y=0,double z=0,double t=0)
     {
-        _vars["x"]=x;_vars["y"]=y;_vars["z"]=z;
+        _vars["x"]=x;_vars["y"]=y;_vars["z"]=z;_vars["t"]=t;
         var value=_evaluate();
         return double.IsFinite(value)?value:double.NaN;
     }
@@ -79,7 +79,7 @@ public sealed class EquationEngine
         var name=_source[start.._pos].ToLowerInvariant();
         if(name=="pi")return ()=>Math.PI;
         if(name=="e")return ()=>Math.E;
-        if(name is "x" or "y" or "z")return ()=>_vars[name];
+        if(name is "x" or "y" or "z" or "t")return ()=>_vars[name];
         if(!Take('('))throw new FormatException("Funzione sconosciuta: "+name);
         var arg=ParseExpression();
         if(!Take(')'))throw new FormatException("Parentesi mancante dopo "+name);

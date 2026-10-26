@@ -26,8 +26,9 @@
 </Grid></TabItem><TabItem Header="Funzioni"><ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="20" MaxWidth="620" HorizontalAlignment="Left">
 <TextBlock Text="Equazione (usa * per moltiplicare e ^ per le potenze)" TextWrapping="Wrap" Margin="0,0,0,8"/>
 <TextBox x:Name="EquationBox" Text="y = x^2 - 2*x - 3" FontSize="17" Padding="8" Width="480" HorizontalAlignment="Left"/>
-<TextBlock Text="Esempi: y=sin(x), x^2+y^2=25, z=sin(x)*cos(y)" Margin="0,8,0,14" TextWrapping="Wrap"/>
-<TextBlock Text="Intervallo di disegno (coordinate)" Margin="0,0,0,6"/>
+<TextBlock Text="Esempi: y=sin(x), x^2+y^2=25, z=sin(x)*cos(y), x^2+y^2+z^2=25" Margin="0,8,0,14" TextWrapping="Wrap"/>
+<TextBlock Text="Curve parametriche 3D: inserisci x=cos(t); y=sin(t); z=t (separate da ;)" TextWrapping="Wrap" Margin="0,0,0,10"/>
+<TextBlock Text="Intervallo di disegno (coordinate o parametro t)" Margin="0,0,0,6"/>
 <StackPanel Orientation="Horizontal"><TextBox x:Name="RangeMinBox" Text="-10" Width="90" Padding="6"/><TextBlock Text=" a " VerticalAlignment="Center" Margin="8,0"/><TextBox x:Name="RangeMaxBox" Text="10" Width="90" Padding="6"/></StackPanel>
 <TextBlock Text="Colore della curva" Margin="0,14,0,6"/><ComboBox x:Name="EquationColorBox" Width="210" Height="32" HorizontalAlignment="Left"><ComboBox.ItemTemplate><DataTemplate><StackPanel Orientation="Horizontal"><Rectangle Width="20" Height="16" Fill="{Binding Brush}" Stroke="#888" Margin="0,0,10,0"/><TextBlock Text="{Binding Name}"/></StackPanel></DataTemplate></ComboBox.ItemTemplate></ComboBox>
 <Button Content="Disegna sul canvas" Click="PlotEquationClicked" Padding="14,9" Margin="0,20,0,0" HorizontalAlignment="Left"/>

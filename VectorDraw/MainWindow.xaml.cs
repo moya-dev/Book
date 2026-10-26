@@ -200,6 +200,55 @@ public partial class MainWindow : Window
         _vectors.Clear();_curves.Clear();Render();
         Status.Text="Canvas ripulito.";
     }
+    private static void PlotImplicitSurface(EquationEngine expression,double min,double max,Action<double,double,double,double,double,double> add)
+    {
+        const int n=30;
+        double step=(max-min)/n;
+        var values=new double[n+1,n+1,n+1];
+        for(int i=0;i<=n;i++)for(int j=0;j<=n;j++)for(int k=0;k<=n;k++)
+            values[i,j,k]=expression.Evaluate(min+i*step,min+j*step,min+k*step);
+        int[,] offsets={{0,0,0},{1,0,0},{1,1,0},{0,1,0},{0,0,1},{1,0,1},{1,1,1},{0,1,1}};
+        int[,] tetra={{0,5,1,6},{0,1,2,6},{0,2,3,6},{0,3,7,6},{0,7,4,6},{0,4,5,6}};
+        int[,] edges={{0,1},{0,2},{0,3},{1,2},{1,3},{2,3}};
+        for(int i=0;i<n;i++)for(int j=0;j<n;j++)for(int k=0;k<n;k++)
+        {
+            var corners=new (double X,double Y,double Z,double V)[8];
+            for(int v=0;v<8;v++)
+            {
+                int ix=i+offsets[v,0],iy=j+offsets[v,1],iz=k+offsets[v,2];
+                corners[v]=(min+ix*step,min+iy*step,min+iz*step,values[ix,iy,iz]);
+            }
+            for(int t=0;t<6;t++)
+            {
+                var pts=new List<(double X,double Y,double Z)>();
+                for(int e=0;e<6;e++)
+                {
+                    var a=corners[tetra[t,edges[e,0]]];
+                    var b=corners[tetra[t,edges[e,1]]];
+                    if(!double.IsFinite(a.V)||!double.IsFinite(b.V)||((a.V<0)==(b.V<0)))continue;
+                    var ratio=a.V/(a.V-b.V);
+                    pts.Add((a.X+ratio*(b.X-a.X),a.Y+ratio*(b.Y-a.Y),a.Z+ratio*(b.Z-a.Z)));
+                }
+                if(pts.Count==3)
+                {
+                    for(int q=0;q<3;q++)
+                    {
+                        var a=pts[q];var b=pts[(q+1)%3];
+                        add(a.X,a.Y,a.Z,b.X,b.Y,b.Z);
+                    }
+                }
+                else if(pts.Count==4)
+                {
+                    int[,] tri={{0,1,2},{0,2,3}};
+                    for(int q=0;q<2;q++)for(int e=0;e<3;e++)
+                    {
+                        var a=pts[tri[q,e]];var b=pts[tri[q,(e+1)%3]];
+                        add(a.X,a.Y,a.Z,b.X,b.Y,b.Z);
+                    }
+                }
+            }
+        }
+    }
     private void PlotEquationClicked(object sender,RoutedEventArgs e)
     {
         try
@@ -219,7 +268,8 @@ public partial class MainWindow : Window
             if(!TryColor(color,out _))throw new FormatException("Colore non valido.");
             var left=parts[0].Trim().ToLowerInvariant();
             var right=parts[1].Trim().ToLowerInvariant();
-            int required=left=="z"?3:2;
+            bool parametric=input.Contains(';');
+            int required=parametric||left=="z"||left.Contains('z')||right.Contains('z')?3:2;
             var generated=new List<CurveLine>();
             void Add(double x1,double y1,double z1,double x2,double y2,double z2)
             {
@@ -228,7 +278,30 @@ public partial class MainWindow : Window
             }
             const int n=180;
             var step=(max-min)/n;
-            if(left=="y"&&!right.Contains('y')&&!right.Contains('z'))
+            if(parametric)
+            {
+                var definitions=input.Split(';',StringSplitOptions.RemoveEmptyEntries|StringSplitOptions.TrimEntries);
+                var expressions=new Dictionary<string,EquationEngine>(StringComparer.OrdinalIgnoreCase);
+                foreach(var definition in definitions)
+                {
+                    var assignment=definition.Split('=',2,StringSplitOptions.TrimEntries);
+                    if(assignment.Length!=2||assignment[0] is not ("x" or "y" or "z")||expressions.ContainsKey(assignment[0]))
+                        throw new FormatException("Usa x=...; y=...; z=... con una definizione per coordinata.");
+                    expressions.Add(assignment[0],new EquationEngine(assignment[1]));
+                }
+                if(expressions.Count!=3)throw new FormatException("La curva parametrica richiede x(t), y(t) e z(t).");
+                const int samples=1200;
+                var dt=(max-min)/samples;
+                for(int i=0;i<samples;i++)
+                {
+                    var t1=min+i*dt;var t2=t1+dt;
+                    double X(double t)=>expressions["x"].Evaluate(t:t);
+                    double Y(double t)=>expressions["y"].Evaluate(t:t);
+                    double Z(double t)=>expressions["z"].Evaluate(t:t);
+                    Add(X(t1),Y(t1),Z(t1),X(t2),Y(t2),Z(t2));
+                }
+            }
+            else if(left=="y"&&!right.Contains('y')&&!right.Contains('z'))
             {
                 var expr=new EquationEngine(right);
                 for(int i=0;i<n;i++)
@@ -260,8 +333,12 @@ public partial class MainWindow : Window
             }
             else
             {
-                if(left.Contains('z')||right.Contains('z'))
-                    throw new NotSupportedException("Le superfici implicite 3D non sono ancora supportate. Usa z=f(x,y).");
+                if(required==3)
+                {
+                    PlotImplicitSurface(new EquationEngine("("+left+")-("+right+")"),min,max,Add);
+                }
+                else
+                {
                 // Curve implicite 2D: contorni di F(x,y)=0 con marching squares.
                 var expr=new EquationEngine("("+left+")-("+right+")");
                 var values=new double[n+1,n+1];
@@ -305,6 +382,7 @@ public partial class MainWindow : Window
                     for(int k=0;k+1<hits.Count;k+=2)
                         Add(hits[k].X,hits[k].Y,0,hits[k+1].X,hits[k+1].Y,0);
                 }
+            }
             }
             if(generated.Count==0)throw new InvalidOperationException("Nessuna curva trovata nell'intervallo indicato.");
             if(required>Dim)

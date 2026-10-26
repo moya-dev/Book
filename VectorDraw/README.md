@@ -68,3 +68,11 @@ Nella sottoscheda **Risultato**, dopo il calcolo, scegliere **Sostituisci vettor
 
 ## Equazioni e curve sul canvas
 Il tab **Funzioni** permette di inserire un'equazione, un intervallo e un colore. **Disegna sul canvas** aggiunge il risultato ai vettori e alle curve presenti. Sono disponibili funzioni esplicite 2D (`y=f(x)`, `x=f(y)`), curve implicite 2D (`x^2+y^2=25`) e superfici esplicite 3D (`z=f(x,y)`, rappresentate con reticolo). Funzioni: `sin`, `cos`, `tan`, `asin`, `acos`, `atan`, `sqrt`, `abs`, `exp`, `ln`, `log`, `floor`, `ceil`; costanti `pi` ed `e`. La moltiplicazione richiede `*`. Le superfici implicite 3D non sono ancora supportate. Il tab **Vettori e grafici** dispone di **Ripulisci canvas** per cancellare vettori e curve. I risultati delle matrici vengono sempre aggiunti al canvas, ampliando la dimensione se necessario. Le curve sono salvate nel JSON del progetto ed esportate nell'SVG.
+
+### Funzioni tridimensionali
+Nel tab Funzioni sono disponibili tre modalità:
+- **Superficie esplicita:** `z=x^2+y^2` o `z=sin(x)*cos(y)`.
+- **Superficie implicita:** `x^2+y^2+z^2=25` (sfera), `x^2+y^2=9` (cilindro: attenzione, questa espressione priva di z viene attualmente interpretata come curva 2D).
+- **Curva parametrica 3D:** `x=cos(t); y=sin(t); z=t`, con intervallo riferito al parametro `t`.
+
+Le superfici sono rese come reticoli di segmenti ruotabili, non come solidi ombreggiati. Il motore implicito usa una discretizzazione a tetraedri e può non individuare dettagli più piccoli della griglia.
