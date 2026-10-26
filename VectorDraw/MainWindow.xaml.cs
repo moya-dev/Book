@@ -24,8 +24,8 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent(); VectorGrid.ItemsSource=_vectors;
-        _vectors.Add(new VectorItem{Name="u",Components="3; 2; 1",Color="#D94848"});
-        _vectors.Add(new VectorItem{Name="v",Components="-2; 3; 2",Color="#2563EB"});
+        _vectors.Add(new VectorItem{Name="u",Components="3; 2",Color="#D94848"});
+        _vectors.Add(new VectorItem{Name="v",Components="-2; 3",Color="#2563EB"});
         foreach(var v in _vectors) v.PropertyChanged+=VectorChanged;
         _ready=true; Render();
     }
