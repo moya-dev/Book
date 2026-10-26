@@ -65,6 +65,7 @@ public partial class MainWindow : Window
             _vectors.Add(item);
         }
         MainTabs.SelectedIndex=0;
+        Dispatcher.BeginInvoke(new Action(FitVectorsToCanvas),System.Windows.Threading.DispatcherPriority.Loaded);
         Render();
         Status.Text=$"ℝ{dim} · {count} vettori importati dalla matrice risultato.";
     }
@@ -89,9 +90,55 @@ public partial class MainWindow : Window
         Render();
     }
     private void CanvasResized(object sender,SizeChangedEventArgs e)=>Render();
+    private void ZoomInClicked(object sender,RoutedEventArgs e)=>ZoomBy(1.25);
+    private void ZoomOutClicked(object sender,RoutedEventArgs e)=>ZoomBy(0.8);
+    private void FitClicked(object sender,RoutedEventArgs e)=>FitVectorsToCanvas();
+    private void ZoomBy(double factor)
+    {
+        ScaleSlider.Value=Math.Clamp(ScaleSlider.Value*factor,ScaleSlider.Minimum,ScaleSlider.Maximum);
+    }
+    private void FitVectorsToCanvas()
+    {
+        var width=DrawingCanvas.ActualWidth;
+        var height=DrawingCanvas.ActualHeight;
+        if(width<=0||height<=0)return;
+        double maxX=0,maxY=0;
+        foreach(var v in _vectors)
+        {
+            if(!Parse(v,Dim,out var c))continue;
+            // Calcola l'ingombro in coordinate proiettate, indipendentemente dallo zoom.
+            var x=c[0];var y=Dim>=2?c[1]:0;var z=Dim==3?c[2]:0;
+            void Measure(double px,double py,double pz)
+            {
+                var projected=Project(px,py,pz,0,0);
+                maxX=Math.Max(maxX,Math.Abs(projected.X/Scale));
+                maxY=Math.Max(maxY,Math.Abs(projected.Y/Scale));
+            }
+            Measure(x,y,z);
+            if(ComponentsCheck.IsChecked==true)
+            {
+                Measure(x,0,0);
+                if(Dim>=2)Measure(0,y,0);
+                if(Dim==3)
+                {
+                    Measure(0,0,z);
+                    if(GuidesCheck.IsChecked==true)
+                    {
+                        Measure(x,y,0);Measure(x,0,z);Measure(0,y,z);
+                    }
+                }
+            }
+        }
+        if(maxX<1e-12&&maxY<1e-12)return;
+        // Lascia un margine per frecce e nomi; riduce o ingrandisce secondo necessità.
+        var desired=Math.Min(maxX<1e-12?double.PositiveInfinity:width*0.39/maxX,
+                             maxY<1e-12?double.PositiveInfinity:height*0.39/maxY);
+        if(double.IsFinite(desired))
+            ScaleSlider.Value=Math.Clamp(desired,ScaleSlider.Minimum,ScaleSlider.Maximum);
+    }
     private void CanvasWheel(object sender,MouseWheelEventArgs e)
     {
-        ScaleSlider.Value=Math.Clamp(ScaleSlider.Value*(e.Delta>0?1.12:1/1.12),ScaleSlider.Minimum,ScaleSlider.Maximum);
+        ZoomBy(e.Delta>0?1.12:1/1.12);
         e.Handled=true;
     }
     private void LanguageChanged(object sender,SelectionChangedEventArgs e)
