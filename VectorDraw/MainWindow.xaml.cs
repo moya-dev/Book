@@ -102,28 +102,54 @@ public partial class MainWindow : Window
             var p=Project(c[0],Dim>1?c[1]:0,Dim>2?c[2]:0,cx,cy);
             if(ComponentsCheck.IsChecked==true)
             {
-                // Ogni componente è un vettore lungo il rispettivo asse.
-                // La linea tratteggiata collega l'origine alla proiezione assiale.
+                // Componenti cartesiane: frecce vere e proprie sugli assi.
+                // Le linee ausiliarie seguono spigoli paralleli agli assi,
+                // non collegamenti diagonali tra punta e proiezioni.
+                var origin=new Point(cx,cy);
+                var axisEnds=new Point[Dim];
                 for(int axis=0;axis<Dim;axis++)
                 {
-                    var px=axis==0?c[0]:0;
-                    var py=axis==1?c[1]:0;
-                    var pz=axis==2?c[2]:0;
-                    var end=Project(px,py,pz,cx,cy);
-                    AddLine(new(cx,cy),end,color,1.4,false,true);
+                    axisEnds[axis]=Project(axis==0?c[0]:0,axis==1?c[1]:0,axis==2?c[2]:0,cx,cy);
+                }
+                // Disegnare prima le costruzioni tratteggiate.
+                if(Dim==2)
+                {
+                    var xy=p;
+                    AddLine(axisEnds[0],xy,color,1.1,false,true);
+                    AddLine(axisEnds[1],xy,color,1.1,false,true);
+                }
+                else if(Dim==3)
+                {
+                    // Piano xy: O, X, Y, XY. Poi elevazione da XY a XYZ.
+                    var xy=Project(c[0],c[1],0,cx,cy);
+                    var xz=Project(c[0],0,c[2],cx,cy);
+                    var yz=Project(0,c[1],c[2],cx,cy);
+                    AddLine(axisEnds[0],xy,color,1.1,false,true);
+                    AddLine(axisEnds[1],xy,color,1.1,false,true);
+                    AddLine(xy,p,color,1.1,false,true);
+                    // Altri due percorsi paralleli agli assi, utili a
+                    // rendere leggibile il parallelepipedo in prospettiva.
+                    AddLine(axisEnds[0],xz,color,0.9,false,true);
+                    AddLine(axisEnds[2],xz,color,0.9,false,true);
+                    AddLine(xz,p,color,0.9,false,true);
+                    AddLine(axisEnds[1],yz,color,0.9,false,true);
+                    AddLine(axisEnds[2],yz,color,0.9,false,true);
+                    AddLine(yz,p,color,0.9,false,true);
+                }
+                for(int axis=0;axis<Dim;axis++)
+                {
+                    var end=axisEnds[axis];
+                    if(Point.Subtract(end,origin).Length<0.01)continue;
+                    // Frecce componenti continue, spesse e visibili sugli assi.
+                    AddLine(origin,end,color,3.2,true);
                     if(NamesCheck.IsChecked==true)
                     {
-                        var middle=new Point(cx+(end.X-cx)*0.55,cy+(end.Y-cy)*0.55);
-                        _labels.Add(new Caption(middle.X+5,middle.Y-5,v.Name,color,13,"xyz"[axis].ToString()));
-                    }
-                }
-                // Linee ausiliarie dal punto finale alle proiezioni assiali.
-                if(Dim>=2)
-                {
-                    for(int axis=0;axis<Dim;axis++)
-                    {
-                        var end=Project(axis==0?c[0]:0,axis==1?c[1]:0,axis==2?c[2]:0,cx,cy);
-                        AddLine(end,p,color,0.9,false,true);
+                        var dx=end.X-cx;var dy=end.Y-cy;
+                        var length=Math.Sqrt(dx*dx+dy*dy);
+                        var nx=length>0.01?-dy/length:0;
+                        var ny=length>0.01?dx/length:0;
+                        var middle=new Point(cx+dx*0.65+nx*13,cy+dy*0.65+ny*13);
+                        _labels.Add(new Caption(middle.X,middle.Y,v.Name,color,13,"xyz"[axis].ToString()));
                     }
                 }
             }
