@@ -54,3 +54,6 @@ Dopo aver eseguito il calcolo nella sottoscheda **Risultato**, attivare **Disegn
 - La matrice può contenere fino a 10 vettori; sono usati i 10 colori distinti della palette.
 - Il trasferimento **sostituisce** i vettori presenti nell'elenco e nel canvas (non è un semplice nascondimento), imposta ℝ¹/ℝ²/ℝ³ e seleziona il tab dei grafici.
 - Il file JSON già salvato su disco resta invariato finché l'utente non preme **Salva progetto**.
+
+## Zoom adattivo del canvas
+Il canvas permette di ingrandire e rimpicciolire il contenuto con i pulsanti **+**, **−**, lo slider **Scala** e la rotellina del mouse. Il pulsante **Adatta vettori** calcola la scala in base all'ingombro proiettato dei vettori, con margini del 39% per semiasse. Anche i vettori molto lunghi possono così essere visualizzati rimpicciolendo lo spazio. Dopo l'importazione dei vettori da una matrice, l'adattamento viene eseguito automaticamente.
