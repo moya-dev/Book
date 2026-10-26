@@ -46,3 +46,11 @@ Il pulsante **Esegui operazione** calcola il risultato, segnala errori di input 
 - Matrici: sottoscheda **Impostazioni** con numero di matrici (1–10) e scelta dell'operazione; sottoschede A, B, C… generate automaticamente; sottoscheda **Risultato** con pulsante di calcolo e matrice risultante.
 - Somma e prodotto matriciale su più operandi sono applicati da sinistra a destra; le operazioni con scalare usano A.
 - Le matrici restano separate dal JSON dei progetti vettoriali.
+
+## Disegnare il risultato matriciale
+Dopo aver eseguito il calcolo nella sottoscheda **Risultato**, attivare **Disegna il risultato sul canvas**, scegliere **Vettori nelle colonne** oppure **Vettori nelle righe** e premere **Trasferisci al canvas**.
+- Con vettori nelle colonne, il numero di righe della matrice deve essere da 1 a 3; ciascuna colonna è un vettore.
+- Con vettori nelle righe, il numero di colonne deve essere da 1 a 3; ciascuna riga è un vettore.
+- La matrice può contenere fino a 10 vettori; sono usati i 10 colori distinti della palette.
+- Il trasferimento **sostituisce** i vettori presenti nell'elenco e nel canvas (non è un semplice nascondimento), imposta ℝ¹/ℝ²/ℝ³ e seleziona il tab dei grafici.
+- Il file JSON già salvato su disco resta invariato finché l'utente non preme **Salva progetto**.
