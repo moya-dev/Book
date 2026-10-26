@@ -22,3 +22,10 @@ Il rendering SVG è vettoriale; l'anteprima e l'esportazione condividono le stes
 
 ## Limiti della versione iniziale
 Nessun test di compilazione eseguito in Windows in questo ambiente. La palette comprende dieci colori predefiniti; non include ancora un selettore colore arbitrario, trascinamento del punto d'origine, frecce/etichette con formule LaTeX o occlusione 3D.
+
+## Novità interfaccia
+- Trascinare il separatore verticale tra elenco e disegno per espandere il canvas; la finestra è ridimensionabile.
+- **Mostra vettori componenti** abilita le frecce lungo gli assi; **Tratteggi del parallelepipedo** abilita separatamente le costruzioni ausiliarie. I tratteggi seguono il colore della componente parallela.
+- Nel popup ogni componente x/y/z può avere un colore indipendente, oppure **Come il vettore** (valore predefinito).
+- All'avvio viene riaperto l'ultimo file JSON salvato o aperto, se ancora disponibile. Il percorso è conservato in `%APPDATA%\\VectorDraw\\last-project.txt`.
+- Passando da ℝ² a ℝ³ viene aggiunta la coordinata z=0; passando a dimensioni inferiori vengono rimosse le coordinate eccedenti.
