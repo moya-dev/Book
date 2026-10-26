@@ -12,7 +12,7 @@ public sealed class EquationEngine
     {
         _source=expression.Replace(" ","").Replace("π","pi");
         _evaluate=ParseExpression();
-        if(_pos!=_source.Length)throw new FormatException("Simbolo inatteso alla posizione "+(_pos+1));
+        if(_pos!=_source.Length)throw new FormatException(I18n.T("Simbolo inatteso alla posizione ")+(_pos+1));
     }
     public double Evaluate(double x=0,double y=0,double z=0,double t=0)
     {
@@ -62,7 +62,7 @@ public sealed class EquationEngine
         if(Take('('))
         {
             var e=ParseExpression();
-            if(!Take(')'))throw new FormatException("Parentesi di chiusura mancante.");
+            if(!Take(')'))throw new FormatException(I18n.T("Parentesi di chiusura mancante."));
             return e;
         }
         int start=_pos;
@@ -70,19 +70,19 @@ public sealed class EquationEngine
         if(_pos>start)
         {
             if(!double.TryParse(_source[start.._pos].Replace(',','.'),NumberStyles.Float,CultureInfo.InvariantCulture,out var number))
-                throw new FormatException("Numero non valido.");
+                throw new FormatException(I18n.T("Numero non valido."));
             return ()=>number;
         }
         start=_pos;
         while(_pos<_source.Length&&char.IsLetter(_source[_pos]))_pos++;
-        if(start==_pos)throw new FormatException("Espressione non valida alla posizione "+(_pos+1));
+        if(start==_pos)throw new FormatException(I18n.T("Espressione non valida alla posizione ")+(_pos+1));
         var name=_source[start.._pos].ToLowerInvariant();
         if(name=="pi")return ()=>Math.PI;
         if(name=="e")return ()=>Math.E;
         if(name is "x" or "y" or "z" or "t")return ()=>_vars[name];
-        if(!Take('('))throw new FormatException("Funzione sconosciuta: "+name);
+        if(!Take('('))throw new FormatException(I18n.T("Funzione sconosciuta: ")+name);
         var arg=ParseExpression();
-        if(!Take(')'))throw new FormatException("Parentesi mancante dopo "+name);
+        if(!Take(')'))throw new FormatException(I18n.T("Parentesi mancante dopo ")+name);
         return name switch
         {
             "sin"=>()=>Math.Sin(arg()),"cos"=>()=>Math.Cos(arg()),
@@ -92,7 +92,7 @@ public sealed class EquationEngine
             "exp"=>()=>Math.Exp(arg()),"ln"=>()=>Math.Log(arg()),
             "log"=>()=>Math.Log10(arg()),"floor"=>()=>Math.Floor(arg()),
             "ceil"=>()=>Math.Ceiling(arg()),
-            _=>throw new FormatException("Funzione non supportata: "+name)
+            _=>throw new FormatException(I18n.T("Funzione non supportata: ")+name)
         };
     }
 }
