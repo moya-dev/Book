@@ -29,3 +29,13 @@ Nessun test di compilazione eseguito in Windows in questo ambiente. La palette c
 - Nel popup ogni componente x/y/z può avere un colore indipendente, oppure **Come il vettore** (valore predefinito).
 - All'avvio viene riaperto l'ultimo file JSON salvato o aperto, se ancora disponibile. Il percorso è conservato in `%APPDATA%\\VectorDraw\\last-project.txt`.
 - Passando da ℝ² a ℝ³ viene aggiunta la coordinata z=0; passando a dimensioni inferiori vengono rimosse le coordinate eccedenti.
+
+## Area Matrici
+La finestra principale contiene due tab: **Vettori e grafici** e **Matrici**.
+In **Matrici**, le sottoschede **Matrice A** e **Matrice B** consentono di definire matrici di dimensioni da 1×1 a 10×10 e inserire valori numerici. Le celle esistenti vengono mantenute quando si modificano le dimensioni.
+La sottoscheda **Risultato** offre:
+- Somma matriciale A+B (richiede dimensioni uguali).
+- Prodotto matriciale A×B (colonne A = righe B).
+- Somma scalare A+k (somma k a ciascuna cella; convenzione elemento per elemento).
+- Prodotto scalare k×A (moltiplica ciascuna cella per k).
+Il pulsante **Esegui operazione** calcola il risultato, segnala errori di input o dimensioni e mostra una griglia di sola lettura. Questa prima versione non salva le matrici nel JSON dei vettori.
