@@ -81,7 +81,7 @@ public partial class MainWindow : Window
         var defaultLanguage=I18n.Language;
         foreach(var option in LanguageBox.Items.OfType<ComboBoxItem>())
             if((string?)option.Tag==defaultLanguage){LanguageBox.SelectedItem=option;break;}
-        _ready=true; LoadLastProject(); I18n.TranslateTree(this); I18n.TranslateColumns(VectorGrid); I18n.TranslateColumns(CurveGrid); Matrices.SetLanguage(); Render();
+        _ready=true; LoadLastProject(); I18n.TranslateTree(this); Title=I18n.T("VectorDraw — Grafici vettoriali SVG"); I18n.TranslateColumns(VectorGrid); I18n.TranslateColumns(CurveGrid); Matrices.SetLanguage(); Render();
     }
     private static readonly string[] MatrixVectorColors=
     {
@@ -226,6 +226,7 @@ public partial class MainWindow : Window
         if(!_ready||LanguageBox.SelectedItem is not ComboBoxItem item)return;
         I18n.Set(item.Tag?.ToString()??"it");
         I18n.TranslateTree(this);
+        Title=I18n.T("VectorDraw — Grafici vettoriali SVG");
         Matrices.SetLanguage();
         var selectedHex=(EquationColorBox.SelectedItem as PaletteColor)?.Hex??"#9333EA";
         var palette=CurvePalette;
