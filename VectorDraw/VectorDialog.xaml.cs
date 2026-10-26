@@ -13,15 +13,26 @@ public partial class VectorDialog : Window
         new("Magenta","#DB2777"),new("Nero","#111827"),new("Grigio","#64748B"),
         new("Giallo ocra","#CA8A04")
     };
+    private static readonly PaletteColor Inherit = new("Come il vettore", "");
+    private static readonly PaletteColor[] ComponentPalette = new[]{Inherit}.Concat(Palette).ToArray();
     private readonly int _dimension;
     public string VectorName {get;private set;}="";
     public string Components {get;private set;}="";
     public string VectorColor {get;private set;}="#2563EB";
+    public string ComponentXColor {get;private set;}="";
+    public string ComponentYColor {get;private set;}="";
+    public string ComponentZColor {get;private set;}="";
     public VectorDialog(int dimension,VectorItem? item=null)
     {
         InitializeComponent();_dimension=dimension;
         YPanel.Visibility=dimension>=2?Visibility.Visible:Visibility.Collapsed;
         ZPanel.Visibility=dimension==3?Visibility.Visible:Visibility.Collapsed;
+        YColorPanel.Visibility=dimension>=2?Visibility.Visible:Visibility.Collapsed;
+        ZColorPanel.Visibility=dimension==3?Visibility.Visible:Visibility.Collapsed;
+        XColorBox.ItemsSource=ComponentPalette;YColorBox.ItemsSource=ComponentPalette;ZColorBox.ItemsSource=ComponentPalette;
+        XColorBox.SelectedItem=ComponentPalette.FirstOrDefault(p=>p.Hex==item?.ComponentXColor)??Inherit;
+        YColorBox.SelectedItem=ComponentPalette.FirstOrDefault(p=>p.Hex==item?.ComponentYColor)??Inherit;
+        ZColorBox.SelectedItem=ComponentPalette.FirstOrDefault(p=>p.Hex==item?.ComponentZColor)??Inherit;
         ColorBox.ItemsSource=Palette;
         var parts=(item?.Components??"").Split(';',StringSplitOptions.TrimEntries);
         NameBox.Text=item?.Name??"v";
@@ -47,6 +58,9 @@ public partial class VectorDialog : Window
         }
         VectorName=name;Components=string.Join("; ",values);
         VectorColor=((PaletteColor)ColorBox.SelectedItem!).Hex;
+        ComponentXColor=((PaletteColor)XColorBox.SelectedItem!).Hex;
+        ComponentYColor=((PaletteColor)YColorBox.SelectedItem!).Hex;
+        ComponentZColor=((PaletteColor)ZColorBox.SelectedItem!).Hex;
         DialogResult=true;
     }
 }
