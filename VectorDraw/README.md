@@ -39,3 +39,10 @@ La sottoscheda **Risultato** offre:
 - Somma scalare A+k (somma k a ciascuna cella; convenzione elemento per elemento).
 - Prodotto scalare k×A (moltiplica ciascuna cella per k).
 Il pulsante **Esegui operazione** calcola il risultato, segnala errori di input o dimensioni e mostra una griglia di sola lettura. Questa prima versione non salva le matrici nel JSON dei vettori.
+
+## Aggiornamento: lingue, zoom e impostazione operazioni
+- Selettore lingua in alto: Italiano, English, Français, Deutsch, Español. Le principali etichette dell'interfaccia e della sezione matrici vengono aggiornate senza riavvio.
+- Zoom del canvas: rotellina del mouse sopra il disegno, oppure cursore **Scala** (2–400).
+- Matrici: sottoscheda **Impostazioni** con numero di matrici (1–10) e scelta dell'operazione; sottoschede A, B, C… generate automaticamente; sottoscheda **Risultato** con pulsante di calcolo e matrice risultante.
+- Somma e prodotto matriciale su più operandi sono applicati da sinistra a destra; le operazioni con scalare usano A.
+- Le matrici restano separate dal JSON dei progetti vettoriali.
