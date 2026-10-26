@@ -1,0 +1,20 @@
+{
+  "Dimension": 2,
+  "Scale": 45,
+  "Yaw": -0.78,
+  "Pitch": 0.62,
+  "Grid": true,
+  "Names": true,
+  "Vectors": [
+    {
+      "Name": "v1",
+      "Components": "4; -2",
+      "Color": "#D94848",
+      "ComponentXColor": "",
+      "ComponentYColor": "",
+      "ComponentZColor": ""
+    }
+  ],
+  "ComponentsVisible": false,
+  "GuidesVisible": false
+}

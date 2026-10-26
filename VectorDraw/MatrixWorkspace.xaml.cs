@@ -49,7 +49,7 @@ public partial class MatrixWorkspace : UserControl
         var dock=new DockPanel{Margin=new Thickness(12)};
         var top=new StackPanel();
         DockPanel.SetDock(top,Dock.Top);dock.Children.Add(top);
-        _execute=new Button{Padding=new Thickness(18,8),HorizontalAlignment=HorizontalAlignment.Left,Margin=new Thickness(0,0,0,12)};
+        _execute=new Button{Padding=new Thickness(18,8,18,8),HorizontalAlignment=HorizontalAlignment.Left,Margin=new Thickness(0,0,0,12)};
         _execute.Click+=ExecuteClicked;top.Children.Add(_execute);
         _showOnCanvas=new CheckBox{Margin=new Thickness(0,0,0,8)};
         _showOnCanvas.Checked+=(_,_)=>UpdateDrawOptions();
@@ -61,7 +61,7 @@ public partial class MatrixWorkspace : UserControl
         _byColumns.Checked+=(_,_)=>UpdateDrawOptions();
         _byRows.Checked+=(_,_)=>UpdateDrawOptions();
         _drawOptions.Children.Add(_byColumns);_drawOptions.Children.Add(_byRows);top.Children.Add(_drawOptions);
-        _draw=new Button{Padding=new Thickness(12,7),HorizontalAlignment=HorizontalAlignment.Left,Margin=new Thickness(0,0,0,12)};
+        _draw=new Button{Padding=new Thickness(12,7,12,7),HorizontalAlignment=HorizontalAlignment.Left,Margin=new Thickness(0,0,0,12)};
         _draw.Click+=DrawClicked;top.Children.Add(_draw);
         UpdateDrawOptions();
         _status=new TextBlock{TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,0,0,10)};
