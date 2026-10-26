@@ -167,6 +167,7 @@ public partial class MainWindow : Window
     }
     private static string F(double v)=>v.ToString("0.###",CultureInfo.InvariantCulture);
     private static string Xml(string? s)=>System.Security.SecurityElement.Escape(s??"")??"";
+    private static string SubscriptSvg(Caption t) => t.Subscript.Length==0 ? "" : "<tspan baseline-shift=\'sub\' font-size=\'70%\'>"+Xml(t.Subscript)+"</tspan>";
     private string MakeSvg(double width,double height)
     {
         Build(width,height);
@@ -174,11 +175,12 @@ public partial class MainWindow : Window
         sb.AppendLine($"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"{F(width)}\" height=\"{F(height)}\" viewBox=\"0 0 {F(width)} {F(height)}\">");
         foreach(var s in _segments)
         {
-            sb.AppendLine($"  <line x1=\"{F(s.X1)}\" y1=\"{F(s.Y1)}\" x2=\"{F(s.X2)}\" y2=\"{F(s.Y2)}\" stroke=\"{Xml(s.Color)}\" stroke-width=\"{F(s.Width)}\"{(s.Dashed?" stroke-dasharray=\\"5 4\\"":"")} />");
+            var dashAttribute = s.Dashed ? " stroke-dasharray=\'5 4\'" : "";
+            sb.AppendLine($"  <line x1=\"{F(s.X1)}\" y1=\"{F(s.Y1)}\" x2=\"{F(s.X2)}\" y2=\"{F(s.Y2)}\" stroke=\"{Xml(s.Color)}\" stroke-width=\"{F(s.Width)}\"{dashAttribute} />");
             if(s.Arrow){var pts=Arrow(new(s.X1,s.Y1),new(s.X2,s.Y2),10);
                 if(pts.Length>0)sb.AppendLine($"  <polygon points=\"{string.Join(" ",pts.Select(p=>$"{F(p.X)},{F(p.Y)}"))}\" fill=\"{Xml(s.Color)}\" />");}
         }
-        foreach(var t in _labels)sb.AppendLine($"  <text x=\"{F(t.X)}\" y=\"{F(t.Y)}\" fill=\"{Xml(t.Color)}\" font-family=\"Arial, sans-serif\" font-size=\"{t.Size}\">{Xml(t.Text)}{(t.Subscript.Length>0?$"<tspan baseline-shift=\\"sub\\" font-size=\\"70%\\">{Xml(t.Subscript)}</tspan>":"")}</text>");
+        foreach(var t in _labels)sb.AppendLine($"  <text x=\"{F(t.X)}\" y=\"{F(t.Y)}\" fill=\"{Xml(t.Color)}\" font-family=\"Arial, sans-serif\" font-size=\"{t.Size}\">{Xml(t.Text)}{SubscriptSvg(t)}</text>");
         sb.AppendLine("</svg>");return sb.ToString();
     }
     private void ExportClicked(object sender,RoutedEventArgs e)
