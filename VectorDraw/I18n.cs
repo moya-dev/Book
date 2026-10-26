@@ -8,6 +8,11 @@ public static class I18n
     private static readonly Dictionary<string,string[]> Words=new()
     {
         // Italiano, English, Français, Deutsch, Español
+        ["Disegna il risultato sul canvas"]=["Disegna il risultato sul canvas","Draw result on canvas","Dessiner le résultat sur le canevas","Ergebnis auf Zeichenfläche darstellen","Dibujar el resultado en el lienzo"],
+        ["Vettori nelle colonne"]=["Vettori nelle colonne","Vectors in columns","Vecteurs en colonnes","Vektoren in Spalten","Vectores en columnas"],
+        ["Vettori nelle righe"]=["Vettori nelle righe","Vectors in rows","Vecteurs en lignes","Vektoren in Zeilen","Vectores en filas"],
+        ["Trasferisci al canvas"]=["Trasferisci al canvas","Transfer to canvas","Transférer vers le canevas","Auf Zeichenfläche übertragen","Transferir al lienzo"],
+        ["Il vettore deve avere da 1 a 3 componenti."]=["Il vettore deve avere da 1 a 3 componenti.","Vectors must have 1 to 3 components.","Les vecteurs doivent avoir de 1 à 3 composantes.","Vektoren müssen 1 bis 3 Komponenten haben.","Los vectores deben tener entre 1 y 3 componentes."],
         ["Vettori e grafici"]=["Vettori e grafici","Vectors and graphs","Vecteurs et graphiques","Vektoren und Grafiken","Vectores y gráficos"],
         ["Matrici"]=["Matrici","Matrices","Matrices","Matrizen","Matrices"],
         ["Matrice"]=["Matrice","Matrix","Matrice","Matrix","Matriz"],
