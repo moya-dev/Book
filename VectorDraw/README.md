@@ -1,0 +1,23 @@
+# VectorDraw
+
+Editor WPF per vettori matematici in ℝ¹, ℝ² e ℝ³, con esportazione SVG e salvataggio JSON.
+
+## Requisiti
+- Windows 10/11
+- Visual Studio con workload **Sviluppo desktop .NET** e SDK .NET 10
+
+## Avvio
+Aprire `VectorDraw.csproj` in Visual Studio e premere F5, oppure eseguire `dotnet run` da Windows.
+
+## Uso
+- Selezionare ℝ¹, ℝ² o ℝ³.
+- Inserire esattamente 1, 2 o 3 componenti per vettore, separate da punto e virgola (`3; 2; 1`).
+- Impostare un colore esadecimale (`#D94848`).
+- In ℝ³ trascinare il mouse sul grafico per ruotare la vista.
+- Esportare SVG con sfondo trasparente o salvare/riaprire il progetto JSON.
+
+## Note
+Il rendering SVG è vettoriale; l'anteprima e l'esportazione condividono le stesse primitive. La proiezione 3D è ortografica. I numeri decimali sono accettati secondo la cultura locale o in formato internazionale. I vettori con componenti non valide sono saltati e segnalati nella barra di stato.
+
+## Limiti della versione iniziale
+Nessun test di compilazione eseguito in Windows in questo ambiente. Non include ancora editor colore visuale, trascinamento del punto d'origine, frecce/etichette con formule LaTeX o occlusione 3D.
