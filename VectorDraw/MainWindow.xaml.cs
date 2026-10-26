@@ -14,6 +14,17 @@ namespace VectorDraw;
 public partial class MainWindow : Window
 {
     private readonly ObservableCollection<VectorItem> _vectors = new();
+    private sealed record PaletteColor(string Name,string Hex)
+    {
+        public Brush Brush => new SolidColorBrush((Color)ColorConverter.ConvertFromString(Hex)!);
+    }
+    private static readonly PaletteColor[] CurvePalette =
+    {
+        new("Rosso","#D94848"),new("Blu","#2563EB"),new("Verde","#15936A"),
+        new("Arancione","#EA580C"),new("Viola","#9333EA"),new("Azzurro","#0891B2"),
+        new("Magenta","#DB2777"),new("Nero","#111827"),new("Grigio","#64748B"),
+        new("Giallo ocra","#CA8A04")
+    };
     private double _yaw=-0.78, _pitch=0.62;
     private Point? _drag;
     private bool _ready;
@@ -30,6 +41,8 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent(); VectorGrid.ItemsSource=_vectors;
+        EquationColorBox.ItemsSource=CurvePalette;
+        EquationColorBox.SelectedIndex=4;
         _vectors.Add(new VectorItem{Name="u",Components="3; 2",Color="#D94848"});
         _vectors.Add(new VectorItem{Name="v",Components="-2; 3",Color="#2563EB"});
         foreach(var v in _vectors) v.PropertyChanged+=VectorChanged;
@@ -202,7 +215,7 @@ public partial class MainWindow : Window
                 throw new FormatException("Limite massimo non valido.");
             if(!double.IsFinite(min)||!double.IsFinite(max)||max<=min||max-min>100000)
                 throw new FormatException("Intervallo non valido.");
-            var color=EquationColorBox.Text.Trim();
+            var color=(EquationColorBox.SelectedItem as PaletteColor)?.Hex ?? "#9333EA";
             if(!TryColor(color,out _))throw new FormatException("Colore non valido.");
             var left=parts[0].Trim().ToLowerInvariant();
             var right=parts[1].Trim().ToLowerInvariant();
