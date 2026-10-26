@@ -40,7 +40,8 @@ public partial class VectorDialog : Window
         YBox.Text=parts.Length>1?parts[1]:"0";
         ZBox.Text=parts.Length>2?parts[2]:"0";
         ColorBox.SelectedItem=Palette.FirstOrDefault(p=>p.Hex.Equals(item?.Color,StringComparison.OrdinalIgnoreCase))??Palette[1];
-        Title=item is null?"Nuovo vettore":"Modifica vettore";
+        Title=I18n.T(item is null?"Nuovo vettore":"Modifica vettore");
+        I18n.TranslateTree(this);
     }
     private void ConfirmClicked(object sender,RoutedEventArgs e)
     {
