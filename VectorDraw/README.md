@@ -11,8 +11,9 @@ Aprire `VectorDraw.csproj` in Visual Studio e premere F5, oppure eseguire `dotne
 
 ## Uso
 - Selezionare ℝ¹, ℝ² o ℝ³.
-- Inserire esattamente 1, 2 o 3 componenti per vettore, separate da punto e virgola (`3; 2; 1`).
-- Impostare un colore esadecimale (`#D94848`).
+- Premere **Aggiungi** per aprire il popup con nome e campi separati x, y, z (in base alla dimensione).
+- Selezionare il colore dalla palette; per modificare un vettore usare **Modifica** o doppio clic sulla riga.
+- Abilitare **Mostra componenti tratteggiate e pedici** per visualizzare le proiezioni assiali e le etichette vₓ, vᵧ, v_z anche in SVG.
 - In ℝ³ trascinare il mouse sul grafico per ruotare la vista.
 - Esportare SVG con sfondo trasparente o salvare/riaprire il progetto JSON.
 
@@ -20,4 +21,4 @@ Aprire `VectorDraw.csproj` in Visual Studio e premere F5, oppure eseguire `dotne
 Il rendering SVG è vettoriale; l'anteprima e l'esportazione condividono le stesse primitive. La proiezione 3D è ortografica. I numeri decimali sono accettati secondo la cultura locale o in formato internazionale. I vettori con componenti non valide sono saltati e segnalati nella barra di stato.
 
 ## Limiti della versione iniziale
-Nessun test di compilazione eseguito in Windows in questo ambiente. Non include ancora editor colore visuale, trascinamento del punto d'origine, frecce/etichette con formule LaTeX o occlusione 3D.
+Nessun test di compilazione eseguito in Windows in questo ambiente. La palette comprende dieci colori predefiniti; non include ancora un selettore colore arbitrario, trascinamento del punto d'origine, frecce/etichette con formule LaTeX o occlusione 3D.
