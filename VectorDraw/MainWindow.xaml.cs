@@ -16,7 +16,7 @@ public partial class MainWindow : Window
     private double _yaw=-0.65, _pitch=0.48;
     private Point? _drag;
     private bool _ready;
-    private sealed record Project(int Dimension, double Scale, double Yaw, double Pitch, bool Grid, bool Names, List<VectorItem> Vectors);
+    private sealed record ProjectData(int Dimension, double Scale, double Yaw, double Pitch, bool Grid, bool Names, List<VectorItem> Vectors);
     private sealed record Segment(double X1,double Y1,double X2,double Y2,string Color,double Width,bool Arrow=false);
     private sealed record Caption(double X,double Y,string Text,string Color,int Size=14);
     private readonly List<Segment> _segments=new();
@@ -154,14 +154,14 @@ public partial class MainWindow : Window
     {
         VectorGrid.CommitEdit(DataGridEditingUnit.Row,true);
         var dlg=new SaveFileDialog{Filter="VectorDraw JSON (*.json)|*.json",FileName="progetto.json"};
-        if(dlg.ShowDialog()==true){var p=new Project(Dim,Scale,_yaw,_pitch,GridCheck.IsChecked==true,NamesCheck.IsChecked==true,_vectors.ToList());
+        if(dlg.ShowDialog()==true){var p=new ProjectData(Dim,Scale,_yaw,_pitch,GridCheck.IsChecked==true,NamesCheck.IsChecked==true,_vectors.ToList());
             File.WriteAllText(dlg.FileName,JsonSerializer.Serialize(p,new JsonSerializerOptions{WriteIndented=true}));Status.Text="Progetto salvato.";}
     }
     private void OpenClicked(object sender,RoutedEventArgs e)
     {
         var dlg=new OpenFileDialog{Filter="VectorDraw JSON (*.json)|*.json"};if(dlg.ShowDialog()!=true)return;
         try{
-            var p=JsonSerializer.Deserialize<Project>(File.ReadAllText(dlg.FileName))??throw new InvalidDataException("Progetto vuoto");
+            var p=JsonSerializer.Deserialize<ProjectData>(File.ReadAllText(dlg.FileName))??throw new InvalidDataException("Progetto vuoto");
             if(p.Dimension is <1 or >3)throw new InvalidDataException("Dimensione non valida");
             foreach(var v in _vectors)v.PropertyChanged-=VectorChanged;
             _vectors.Clear();foreach(var v in p.Vectors){v.PropertyChanged+=VectorChanged;_vectors.Add(v);}
