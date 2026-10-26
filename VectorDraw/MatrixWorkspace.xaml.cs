@@ -15,7 +15,12 @@ public partial class MatrixWorkspace : UserControl
     private Grid _result=null!;
     private TextBlock _status=null!;
     private TabItem _headerTab=null!,_resultTab=null!;
-    private Button _execute=null!;
+    private Button _execute=null!, _draw=null!;
+    private CheckBox _showOnCanvas=null!;
+    private RadioButton _byColumns=null!, _byRows=null!;
+    private StackPanel _drawOptions=null!;
+    private double[,]? _lastResult;
+    public event Action<double[,],bool>? DrawResultRequested;
     public MatrixWorkspace()
     {
         InitializeComponent();
@@ -46,11 +51,43 @@ public partial class MatrixWorkspace : UserControl
         DockPanel.SetDock(top,Dock.Top);dock.Children.Add(top);
         _execute=new Button{Padding=new Thickness(18,8),HorizontalAlignment=HorizontalAlignment.Left,Margin=new Thickness(0,0,0,12)};
         _execute.Click+=ExecuteClicked;top.Children.Add(_execute);
+        _showOnCanvas=new CheckBox{Margin=new Thickness(0,0,0,8)};
+        _showOnCanvas.Checked+=(_,_)=>UpdateDrawOptions();
+        _showOnCanvas.Unchecked+=(_,_)=>UpdateDrawOptions();
+        top.Children.Add(_showOnCanvas);
+        _drawOptions=new StackPanel{Orientation=Orientation.Horizontal,Margin=new Thickness(0,0,0,10)};
+        _byColumns=new RadioButton{GroupName="MatrixVectorOrientation",IsChecked=true,Margin=new Thickness(0,0,18,0)};
+        _byRows=new RadioButton{GroupName="MatrixVectorOrientation"};
+        _byColumns.Checked+=(_,_)=>UpdateDrawOptions();
+        _byRows.Checked+=(_,_)=>UpdateDrawOptions();
+        _drawOptions.Children.Add(_byColumns);_drawOptions.Children.Add(_byRows);top.Children.Add(_drawOptions);
+        _draw=new Button{Padding=new Thickness(12,7),HorizontalAlignment=HorizontalAlignment.Left,Margin=new Thickness(0,0,0,12)};
+        _draw.Click+=DrawClicked;top.Children.Add(_draw);
+        UpdateDrawOptions();
         _status=new TextBlock{TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,0,0,10)};
         top.Children.Add(_status);
         _result=new Grid{HorizontalAlignment=HorizontalAlignment.Left,VerticalAlignment=VerticalAlignment.Top};
         dock.Children.Add(new ScrollViewer{Content=_result,HorizontalScrollBarVisibility=ScrollBarVisibility.Auto,VerticalScrollBarVisibility=ScrollBarVisibility.Auto});
         return dock;
+    }
+    private void UpdateDrawOptions()
+    {
+        if(_drawOptions is null)return;
+        _drawOptions.Visibility=_showOnCanvas.IsChecked==true?Visibility.Visible:Visibility.Collapsed;
+        int components=_lastResult is null?0:(_byColumns.IsChecked==true?_lastResult.GetLength(0):_lastResult.GetLength(1));
+        _draw.IsEnabled=_showOnCanvas.IsChecked==true&&components is >=1 and <=3;
+    }
+    private void DrawClicked(object sender,RoutedEventArgs e)
+    {
+        if(_lastResult is null||_showOnCanvas.IsChecked!=true)return;
+        bool columns=_byColumns.IsChecked==true;
+        int components=columns?_lastResult.GetLength(0):_lastResult.GetLength(1);
+        if(components is <1 or >3)
+        {
+            _status.Text=I18n.T("Il vettore deve avere da 1 a 3 componenti.");
+            return;
+        }
+        DrawResultRequested?.Invoke((double[,])_lastResult.Clone(),columns);
     }
     private void RebuildTabs()
     {
@@ -125,10 +162,16 @@ public partial class MatrixWorkspace : UserControl
             ((TextBlock)_scalarPanel.Children[0]).Text=I18n.T("Scalare k");
             ((TextBlock)panel.Children[5]).Text=I18n.T("Le operazioni tra matrici sono applicate in ordine A, B, C…");
         }
-        _execute.Content=I18n.T("Esegui operazione");RefreshOperations();ClearResult();
+        _execute.Content=I18n.T("Esegui operazione");
+        _showOnCanvas.Content=I18n.T("Disegna il risultato sul canvas");
+        _byColumns.Content=I18n.T("Vettori nelle colonne");
+        _byRows.Content=I18n.T("Vettori nelle righe");
+        _draw.Content=I18n.T("Trasferisci al canvas");
+        RefreshOperations();ClearResult();
     }
     private void ClearResult()
     {
+        _lastResult=null;UpdateDrawOptions();
         _result.Children.Clear();_result.RowDefinitions.Clear();_result.ColumnDefinitions.Clear();
         _status.Text=I18n.T("Premi Esegui operazione per aggiornare il risultato.");
     }
@@ -188,6 +231,7 @@ public partial class MatrixWorkspace : UserControl
     }
     private void ShowResult(double[,] matrix)
     {
+        _lastResult=(double[,])matrix.Clone();UpdateDrawOptions();
         _result.Children.Clear();_result.RowDefinitions.Clear();_result.ColumnDefinitions.Clear();
         for(int i=0;i<matrix.GetLength(0);i++)_result.RowDefinitions.Add(new RowDefinition{Height=GridLength.Auto});
         for(int j=0;j<matrix.GetLength(1);j++)_result.ColumnDefinitions.Add(new ColumnDefinition{Width=GridLength.Auto});
