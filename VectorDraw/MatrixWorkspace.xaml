@@ -1,0 +1,38 @@
+<UserControl x:Class="VectorDraw.MatrixWorkspace" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+<Grid Margin="12"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+<TextBlock Text="Operazioni con matrici" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,12"/>
+<TabControl Grid.Row="1" x:Name="MatrixTabs">
+<TabItem Header="Matrice A">
+<DockPanel Margin="12"><StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,12">
+<TextBlock Text="Righe" VerticalAlignment="Center" Margin="0,0,8,0"/><ComboBox x:Name="RowsA" Width="60" SelectionChanged="SizeChangedA" Margin="0,0,18,0"/>
+<TextBlock Text="Colonne" VerticalAlignment="Center" Margin="0,0,8,0"/><ComboBox x:Name="ColsA" Width="60" SelectionChanged="SizeChangedA"/></StackPanel>
+<ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"><Grid x:Name="GridA" HorizontalAlignment="Left" VerticalAlignment="Top"/></ScrollViewer></DockPanel>
+</TabItem>
+<TabItem Header="Matrice B">
+<DockPanel Margin="12"><StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,12">
+<TextBlock Text="Righe" VerticalAlignment="Center" Margin="0,0,8,0"/><ComboBox x:Name="RowsB" Width="60" SelectionChanged="SizeChangedB" Margin="0,0,18,0"/>
+<TextBlock Text="Colonne" VerticalAlignment="Center" Margin="0,0,8,0"/><ComboBox x:Name="ColsB" Width="60" SelectionChanged="SizeChangedB"/></StackPanel>
+<ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"><Grid x:Name="GridB" HorizontalAlignment="Left" VerticalAlignment="Top"/></ScrollViewer></DockPanel>
+</TabItem>
+<TabItem Header="Risultato">
+<DockPanel Margin="12">
+<StackPanel DockPanel.Dock="Top">
+<TextBlock Text="Seleziona l'operazione" FontWeight="SemiBold" Margin="0,0,0,8"/>
+<WrapPanel Margin="0,0,0,10">
+<ComboBox x:Name="OperationBox" Width="290" SelectionChanged="OperationChanged" Margin="0,0,14,8">
+<ComboBoxItem Content="Somma matriciale (A + B)"/>
+<ComboBoxItem Content="Moltiplicazione matriciale (A × B)"/>
+<ComboBoxItem Content="Somma scalare (A + k)"/>
+<ComboBoxItem Content="Moltiplicazione scalare (k × A)"/>
+</ComboBox>
+<StackPanel x:Name="ScalarPanel" Orientation="Horizontal" Visibility="Collapsed">
+<TextBlock Text="Scalare k" VerticalAlignment="Center" Margin="0,0,8,0"/><TextBox x:Name="ScalarBox" Width="90" Text="1" Padding="6"/>
+</StackPanel>
+</WrapPanel>
+<Button Content="Esegui operazione" HorizontalAlignment="Left" Padding="18,8" Click="ExecuteClicked" Margin="0,0,0,10"/>
+<TextBlock x:Name="ResultStatus" Foreground="#334155" TextWrapping="Wrap" Margin="0,0,0,10"/>
+</StackPanel>
+<ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"><Grid x:Name="ResultGrid" HorizontalAlignment="Left" VerticalAlignment="Top"/></ScrollViewer>
+</DockPanel>
+</TabItem>
+</TabControl></Grid></UserControl>
