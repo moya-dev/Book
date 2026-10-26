@@ -1,5 +1,5 @@
 <Window x:Class="VectorDraw.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:local="clr-namespace:VectorDraw" Title="VectorDraw — Grafici vettoriali SVG" Width="1120" Height="720" MinWidth="580" MinHeight="430">
-<TabControl Margin="10"><TabItem Header="Vettori e grafici"><Grid Margin="8"><Grid.ColumnDefinitions><ColumnDefinition Width="310" MinWidth="190"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*" MinWidth="180"/></Grid.ColumnDefinitions>
+<DockPanel Margin="10"><StackPanel DockPanel.Dock="Top" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,6"><TextBlock Text="Lingua / Language" VerticalAlignment="Center" Margin="0,0,8,0"/><ComboBox x:Name="LanguageBox" Width="140" SelectionChanged="LanguageChanged"><ComboBoxItem Content="Italiano" Tag="it" IsSelected="True"/><ComboBoxItem Content="English" Tag="en"/><ComboBoxItem Content="Français" Tag="fr"/><ComboBoxItem Content="Deutsch" Tag="de"/><ComboBoxItem Content="Español" Tag="es"/></ComboBox></StackPanel><TabControl x:Name="MainTabs"><TabItem Header="Vettori e grafici"><Grid Margin="8"><Grid.ColumnDefinitions><ColumnDefinition Width="310" MinWidth="190"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*" MinWidth="180"/></Grid.ColumnDefinitions>
 <GridSplitter Grid.Column="1" Width="7" Background="#CBD5E1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ResizeBehavior="PreviousAndNext" ResizeDirection="Columns"/>
 <DockPanel Grid.Column="0" Margin="0,0,8,0">
 <StackPanel DockPanel.Dock="Top">
@@ -12,7 +12,7 @@
 <WrapPanel Margin="0,0,0,8"><Button Content="+ Aggiungi" Click="AddClicked" Padding="10,6" Margin="0,0,8,0"/><Button Content="Modifica" Click="EditClicked" Padding="10,6" Margin="0,0,8,0"/><Button Content="− Rimuovi" Click="RemoveClicked" Padding="10,6"/></WrapPanel>
 <CheckBox x:Name="GridCheck" Content="Mostra griglia" IsChecked="True" Click="SettingsChanged" Margin="0,0,0,7"/>
 <CheckBox x:Name="ComponentsCheck" Content="Mostra vettori componenti" IsChecked="False" Click="SettingsChanged" Margin="0,0,0,7"/><CheckBox x:Name="GuidesCheck" Content="Tratteggi del parallelepipedo" IsChecked="True" Click="SettingsChanged" Margin="0,0,0,7"/><CheckBox x:Name="NamesCheck" Content="Mostra nomi" IsChecked="True" Click="SettingsChanged" Margin="0,0,0,7"/>
-<TextBlock Text="Scala"/><Slider x:Name="ScaleSlider" Minimum="10" Maximum="100" Value="45" ValueChanged="SettingsChanged" Margin="0,0,0,10"/>
+<TextBlock Text="Scala"/><Slider x:Name="ScaleSlider" Minimum="2" Maximum="400" Value="45" ValueChanged="SettingsChanged" Margin="0,0,0,10"/>
 <TextBlock Text="In ℝ³ trascina sull'anteprima per ruotare." TextWrapping="Wrap" Foreground="Gray" Margin="0,0,0,10"/>
 <WrapPanel><Button Content="Esporta SVG" Click="ExportClicked" Padding="12,8" Margin="0,0,8,8"/><Button Content="Salva progetto" Click="SaveClicked" Padding="12,8" Margin="0,0,8,8"/><Button Content="Apri progetto" Click="OpenClicked" Padding="12,8" Margin="0,0,8,8"/></WrapPanel>
 <TextBlock x:Name="Status" Foreground="DarkSlateGray" TextWrapping="Wrap"/>
@@ -21,5 +21,5 @@
 <DataGrid.Columns><DataGridTextColumn Header="Nome" Binding="{Binding Name, UpdateSourceTrigger=PropertyChanged}" Width="65"/><DataGridTextColumn Header="Componenti" Binding="{Binding Components, UpdateSourceTrigger=PropertyChanged}" Width="*"/><DataGridTemplateColumn Header="Colore" Width="80"><DataGridTemplateColumn.CellTemplate><DataTemplate><StackPanel Orientation="Horizontal"><Rectangle Width="22" Height="14" Fill="{Binding Color}" Stroke="#999" Margin="0,0,5,0"/><TextBlock Text="●" Foreground="{Binding Color}"/></StackPanel></DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn></DataGrid.Columns>
 </DataGrid>
 </DockPanel>
-<Border Grid.Column="2" BorderBrush="#CBD5E1" BorderThickness="1" Background="White" CornerRadius="6"><Canvas x:Name="DrawingCanvas" ClipToBounds="True" SizeChanged="CanvasResized" MouseLeftButtonDown="CanvasDown" MouseLeftButtonUp="CanvasUp" MouseMove="CanvasMove"/></Border>
-</Grid></TabItem><TabItem Header="Matrici"><local:MatrixWorkspace/></TabItem></TabControl></Window>
+<Border Grid.Column="2" BorderBrush="#CBD5E1" BorderThickness="1" Background="White" CornerRadius="6"><Canvas x:Name="DrawingCanvas" ClipToBounds="True" SizeChanged="CanvasResized" MouseLeftButtonDown="CanvasDown" MouseLeftButtonUp="CanvasUp" MouseMove="CanvasMove" MouseWheel="CanvasWheel"/></Border>
+</Grid></TabItem><TabItem Header="Matrici"><local:MatrixWorkspace x:Name="Matrices"/></TabItem></TabControl></DockPanel></Window>
