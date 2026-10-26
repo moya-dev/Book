@@ -12,7 +12,8 @@
 <WrapPanel Margin="0,0,0,8"><Button Content="+ Aggiungi" Click="AddClicked" Padding="10,6" Margin="0,0,8,0"/><Button Content="Modifica" Click="EditClicked" Padding="10,6" Margin="0,0,8,0"/><Button Content="− Rimuovi" Click="RemoveClicked" Padding="10,6"/></WrapPanel>
 <CheckBox x:Name="GridCheck" Content="Mostra griglia" IsChecked="True" Click="SettingsChanged" Margin="0,0,0,7"/>
 <CheckBox x:Name="ComponentsCheck" Content="Mostra vettori componenti" IsChecked="False" Click="SettingsChanged" Margin="0,0,0,7"/><CheckBox x:Name="GuidesCheck" Content="Tratteggi del parallelepipedo" IsChecked="True" Click="SettingsChanged" Margin="0,0,0,7"/><CheckBox x:Name="NamesCheck" Content="Mostra nomi" IsChecked="True" Click="SettingsChanged" Margin="0,0,0,7"/>
-<TextBlock Text="Scala"/><Slider x:Name="ScaleSlider" Minimum="2" Maximum="400" Value="45" ValueChanged="SettingsChanged" Margin="0,0,0,10"/>
+<TextBlock Text="Scala"/><Slider x:Name="ScaleSlider" Minimum="0.001" Maximum="10000" Value="45" ValueChanged="SettingsChanged" Margin="0,0,0,10"/>
+<WrapPanel Margin="0,0,0,8"><Button Content="−" ToolTip="Riduci zoom" Click="ZoomOutClicked" Padding="12,5" Margin="0,0,7,0"/><Button Content="+" ToolTip="Aumenta zoom" Click="ZoomInClicked" Padding="12,5" Margin="0,0,7,0"/><Button x:Name="FitButton" Content="Adatta vettori" Click="FitClicked" Padding="10,5"/></WrapPanel>
 <TextBlock Text="In ℝ³ trascina sull'anteprima per ruotare." TextWrapping="Wrap" Foreground="Gray" Margin="0,0,0,10"/>
 <WrapPanel><Button Content="Esporta SVG" Click="ExportClicked" Padding="12,8" Margin="0,0,8,8"/><Button Content="Salva progetto" Click="SaveClicked" Padding="12,8" Margin="0,0,8,8"/><Button Content="Apri progetto" Click="OpenClicked" Padding="12,8" Margin="0,0,8,8"/></WrapPanel>
 <TextBlock x:Name="Status" Foreground="DarkSlateGray" TextWrapping="Wrap"/>
