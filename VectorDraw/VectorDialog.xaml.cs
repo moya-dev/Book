@@ -8,12 +8,12 @@ public partial class VectorDialog : Window
     {public Brush Brush => new SolidColorBrush((Color)ColorConverter.ConvertFromString(Hex)!);}
     private static readonly PaletteColor[] Palette =
     {
-        new("Rosso","#D94848"),new("Blu","#2563EB"),new("Verde","#15936A"),
-        new("Arancione","#EA580C"),new("Viola","#9333EA"),new("Azzurro","#0891B2"),
-        new("Magenta","#DB2777"),new("Nero","#111827"),new("Grigio","#64748B"),
-        new("Giallo ocra","#CA8A04")
+        new(I18n.T("Rosso"),"#D94848"),new(I18n.T("Blu"),"#2563EB"),new(I18n.T("Verde"),"#15936A"),
+        new(I18n.T("Arancione"),"#EA580C"),new(I18n.T("Viola"),"#9333EA"),new(I18n.T("Azzurro"),"#0891B2"),
+        new(I18n.T("Magenta"),"#DB2777"),new(I18n.T("Nero"),"#111827"),new(I18n.T("Grigio"),"#64748B"),
+        new(I18n.T("Giallo ocra"),"#CA8A04")
     };
-    private static readonly PaletteColor Inherit = new("Come il vettore", "");
+    private static readonly PaletteColor Inherit = new(I18n.T("Come il vettore"), "");
     private static readonly PaletteColor[] ComponentPalette = new[]{Inherit}.Concat(Palette).ToArray();
     private readonly int _dimension;
     public string VectorName {get;private set;}="";
@@ -46,7 +46,7 @@ public partial class VectorDialog : Window
     private void ConfirmClicked(object sender,RoutedEventArgs e)
     {
         var name=NameBox.Text.Trim();
-        if(string.IsNullOrWhiteSpace(name)){ErrorText.Text="Inserisci il nome del vettore.";return;}
+        if(string.IsNullOrWhiteSpace(name)){ErrorText.Text=I18n.T("Inserisci il nome del vettore.");return;}
         var inputs=new[]{XBox.Text,YBox.Text,ZBox.Text};
         var values=new List<string>();
         for(int i=0;i<_dimension;i++)
@@ -54,7 +54,7 @@ public partial class VectorDialog : Window
             if(!double.TryParse(inputs[i],NumberStyles.Float,CultureInfo.CurrentCulture,out var number)
                 && !double.TryParse(inputs[i],NumberStyles.Float,CultureInfo.InvariantCulture,out number)
                 || !double.IsFinite(number))
-            {ErrorText.Text=$"La componente {"xyz"[i]} deve essere un numero valido.";return;}
+            {ErrorText.Text=string.Format(I18n.T("La componente {0} deve essere un numero valido."),"xyz"[i]);return;}
             values.Add(number.ToString("R",CultureInfo.InvariantCulture));
         }
         VectorName=name;Components=string.Join("; ",values);
