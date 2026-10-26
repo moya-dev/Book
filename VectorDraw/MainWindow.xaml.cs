@@ -267,6 +267,25 @@ public partial class MainWindow : Window
                 var values=new double[n+1,n+1];
                 for(int i=0;i<=n;i++)for(int j=0;j<=n;j++)
                     values[i,j]=expr.Evaluate(min+i*step,min+j*step);
+                // Gli zeri isolati (ad esempio x²+y²=0) non attraversano
+                // alcuna cella: rappresentali come punti anziché scartarli.
+                var pointKeys=new HashSet<(int,int)>();
+                for(int i=0;i<=n;i++)for(int j=0;j<=n;j++)
+                {
+                    if(!double.IsFinite(values[i,j])||Math.Abs(values[i,j])>1e-12)continue;
+                    bool isolated=true;
+                    for(int di=-1;di<=1;di++)for(int dj=-1;dj<=1;dj++)
+                    {
+                        int ni=i+di,nj=j+dj;
+                        if((di==0&&dj==0)||ni<0||ni>n||nj<0||nj>n)continue;
+                        if(double.IsFinite(values[ni,nj])&&values[ni,nj]<-1e-12)isolated=false;
+                    }
+                    if(isolated&&pointKeys.Add((i,j)))
+                    {
+                        var px=min+i*step;var py=min+j*step;
+                        Add(px,py,0,px,py,0);
+                    }
+                }
                 for(int i=0;i<n;i++)for(int j=0;j<n;j++)
                 {
                     double x=min+i*step,y=min+j*step;
@@ -466,7 +485,13 @@ public partial class MainWindow : Window
         foreach(var s in _segments)
         {
             TryColor(s.Color,out var color);var brush=new SolidColorBrush(color);
-            DrawingCanvas.Children.Add(new Line{X1=s.X1,Y1=s.Y1,X2=s.X2,Y2=s.Y2,Stroke=brush,StrokeThickness=s.Width,StrokeDashArray=s.Dashed?new DoubleCollection{5,4}:null});
+            if(Math.Abs(s.X1-s.X2)<1e-8&&Math.Abs(s.Y1-s.Y2)<1e-8&&!s.Arrow)
+            {
+                var dot=new Ellipse{Width=8,Height=8,Fill=brush};
+                Canvas.SetLeft(dot,s.X1-4);Canvas.SetTop(dot,s.Y1-4);
+                DrawingCanvas.Children.Add(dot);
+            }
+            else DrawingCanvas.Children.Add(new Line{X1=s.X1,Y1=s.Y1,X2=s.X2,Y2=s.Y2,Stroke=brush,StrokeThickness=s.Width,StrokeDashArray=s.Dashed?new DoubleCollection{5,4}:null});
             if(s.Arrow){var pts=Arrow(new(s.X1,s.Y1),new(s.X2,s.Y2),10);
                 if(pts.Length>0)DrawingCanvas.Children.Add(new Polygon{Points=new PointCollection(pts),Fill=brush});}
         }
@@ -494,7 +519,9 @@ public partial class MainWindow : Window
         foreach(var s in _segments)
         {
             var dashAttribute = s.Dashed ? " stroke-dasharray=\'5 4\'" : "";
-            sb.AppendLine($"  <line x1=\"{F(s.X1)}\" y1=\"{F(s.Y1)}\" x2=\"{F(s.X2)}\" y2=\"{F(s.Y2)}\" stroke=\"{Xml(s.Color)}\" stroke-width=\"{F(s.Width)}\"{dashAttribute} />");
+            if(Math.Abs(s.X1-s.X2)<1e-8&&Math.Abs(s.Y1-s.Y2)<1e-8&&!s.Arrow)
+                sb.AppendLine($"  <circle cx=\"{F(s.X1)}\" cy=\"{F(s.Y1)}\" r=\"4\" fill=\"{Xml(s.Color)}\" />");
+            else sb.AppendLine($"  <line x1=\"{F(s.X1)}\" y1=\"{F(s.Y1)}\" x2=\"{F(s.X2)}\" y2=\"{F(s.Y2)}\" stroke=\"{Xml(s.Color)}\" stroke-width=\"{F(s.Width)}\"{dashAttribute} />");
             if(s.Arrow){var pts=Arrow(new(s.X1,s.Y1),new(s.X2,s.Y2),10);
                 if(pts.Length>0)sb.AppendLine($"  <polygon points=\"{string.Join(" ",pts.Select(p=>$"{F(p.X)},{F(p.Y)}"))}\" fill=\"{Xml(s.Color)}\" />");}
         }
