@@ -14,6 +14,8 @@ public static class I18n
         ["Trasferisci al canvas"]=["Trasferisci al canvas","Transfer to canvas","Transférer vers le canevas","Auf Zeichenfläche übertragen","Transferir al lienzo"],
         ["Il vettore deve avere da 1 a 3 componenti."]=["Il vettore deve avere da 1 a 3 componenti.","Vectors must have 1 to 3 components.","Les vecteurs doivent avoir de 1 à 3 composantes.","Vektoren müssen 1 bis 3 Komponenten haben.","Los vectores deben tener entre 1 y 3 componentes."],
         ["Adatta vettori"]=["Adatta vettori","Fit vectors","Ajuster les vecteurs","Vektoren einpassen","Ajustar vectores"],
+        ["Sostituisci vettori esistenti"]=["Sostituisci vettori esistenti","Replace existing vectors","Remplacer les vecteurs existants","Vorhandene Vektoren ersetzen","Reemplazar vectores existentes"],
+        ["Aggiungi ai vettori esistenti"]=["Aggiungi ai vettori esistenti","Append to existing vectors","Ajouter aux vecteurs existants","Zu vorhandenen Vektoren hinzufügen","Añadir a los vectores existentes"],
         ["Vettori e grafici"]=["Vettori e grafici","Vectors and graphs","Vecteurs et graphiques","Vektoren und Grafiken","Vectores y gráficos"],
         ["Matrici"]=["Matrici","Matrices","Matrices","Matrizen","Matrices"],
         ["Matrice"]=["Matrice","Matrix","Matrice","Matrix","Matriz"],
