@@ -31,7 +31,42 @@ public partial class MainWindow : Window
         _vectors.Add(new VectorItem{Name="u",Components="3; 2",Color="#D94848"});
         _vectors.Add(new VectorItem{Name="v",Components="-2; 3",Color="#2563EB"});
         foreach(var v in _vectors) v.PropertyChanged+=VectorChanged;
+        Matrices.DrawResultRequested+=ImportMatrixVectors;
         _ready=true; LoadLastProject(); I18n.TranslateTree(MainTabs); Matrices.SetLanguage(); Render();
+    }
+    private static readonly string[] MatrixVectorColors=
+    {
+        "#D94848","#2563EB","#15936A","#EA580C","#9333EA",
+        "#0891B2","#DB2777","#111827","#64748B","#CA8A04"
+    };
+    private void ImportMatrixVectors(double[,] matrix,bool byColumns)
+    {
+        int dim=byColumns?matrix.GetLength(0):matrix.GetLength(1);
+        int count=byColumns?matrix.GetLength(1):matrix.GetLength(0);
+        if(dim is <1 or >3||count is <1 or >10)return;
+        // Sostituzione esplicita: elimina anche i vettori dall'elenco e dal progetto in memoria.
+        foreach(var old in _vectors)old.PropertyChanged-=VectorChanged;
+        _vectors.Clear();
+        _loadingProject=true;
+        try{DimensionBox.SelectedIndex=dim-1;_previousDim=dim;}
+        finally{_loadingProject=false;}
+        for(int vector=0;vector<count;vector++)
+        {
+            var values=new string[dim];
+            for(int axis=0;axis<dim;axis++)
+                values[axis]=(byColumns?matrix[axis,vector]:matrix[vector,axis]).ToString("R",CultureInfo.InvariantCulture);
+            var item=new VectorItem
+            {
+                Name=$"v{vector+1}",
+                Components=string.Join("; ",values),
+                Color=MatrixVectorColors[vector]
+            };
+            item.PropertyChanged+=VectorChanged;
+            _vectors.Add(item);
+        }
+        MainTabs.SelectedIndex=0;
+        Render();
+        Status.Text=$"ℝ{dim} · {count} vettori importati dalla matrice risultato.";
     }
     private int Dim=>DimensionBox.SelectedIndex+1;
     private double Scale=>ScaleSlider.Value;
