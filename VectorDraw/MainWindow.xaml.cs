@@ -16,7 +16,10 @@ public partial class MainWindow : Window
     private double _yaw=-0.78, _pitch=0.62;
     private Point? _drag;
     private bool _ready;
-    private sealed record ProjectData(int Dimension, double Scale, double Yaw, double Pitch, bool Grid, bool Names, List<VectorItem> Vectors, bool ComponentsVisible=false);
+    private int _previousDim=2;
+    private bool _loadingProject;
+    private static readonly string LastProjectPointer=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),"VectorDraw","last-project.txt");
+    private sealed record ProjectData(int Dimension, double Scale, double Yaw, double Pitch, bool Grid, bool Names, List<VectorItem> Vectors, bool ComponentsVisible=false, bool GuidesVisible=true);
     private sealed record Segment(double X1,double Y1,double X2,double Y2,string Color,double Width,bool Arrow=false,bool Dashed=false);
     private sealed record Caption(double X,double Y,string Text,string Color,int Size=14,string Subscript="");
     private readonly List<Segment> _segments=new();
@@ -27,18 +30,34 @@ public partial class MainWindow : Window
         _vectors.Add(new VectorItem{Name="u",Components="3; 2",Color="#D94848"});
         _vectors.Add(new VectorItem{Name="v",Components="-2; 3",Color="#2563EB"});
         foreach(var v in _vectors) v.PropertyChanged+=VectorChanged;
-        _ready=true; Render();
+        _ready=true; LoadLastProject(); Render();
     }
     private int Dim=>DimensionBox.SelectedIndex+1;
     private double Scale=>ScaleSlider.Value;
     private void VectorChanged(object? sender,PropertyChangedEventArgs e)=>Render();
-    private void SettingsChanged(object sender, RoutedEventArgs e){if(_ready)Render();}
+    private void SettingsChanged(object sender, RoutedEventArgs e)
+    {
+        if(!_ready)return;
+        if(ReferenceEquals(sender,DimensionBox)&&!_loadingProject)
+        {
+            var next=Dim;
+            foreach(var v in _vectors)
+            {
+                var parts=v.Components.Split(';',StringSplitOptions.TrimEntries).ToList();
+                while(parts.Count<next)parts.Add("0");
+                if(parts.Count>next)parts=parts.Take(next).ToList();
+                v.Components=string.Join("; ",parts);
+            }
+            _previousDim=next;
+        }
+        Render();
+    }
     private void CanvasResized(object sender,SizeChangedEventArgs e)=>Render();
     private void AddClicked(object sender,RoutedEventArgs e)
     {
         var dialog=new VectorDialog(Dim){Owner=this};
         if(dialog.ShowDialog()!=true)return;
-        var v=new VectorItem{Name=dialog.VectorName,Components=dialog.Components,Color=dialog.VectorColor};
+        var v=new VectorItem{Name=dialog.VectorName,Components=dialog.Components,Color=dialog.VectorColor,ComponentXColor=dialog.ComponentXColor,ComponentYColor=dialog.ComponentYColor,ComponentZColor=dialog.ComponentZColor};
         v.PropertyChanged+=VectorChanged;_vectors.Add(v);Render();
     }
     private void EditClicked(object sender,RoutedEventArgs e)=>EditSelected();
@@ -48,7 +67,7 @@ public partial class MainWindow : Window
         if(VectorGrid.SelectedItem is not VectorItem v)return;
         var dialog=new VectorDialog(Dim,v){Owner=this};
         if(dialog.ShowDialog()!=true)return;
-        v.Name=dialog.VectorName;v.Components=dialog.Components;v.Color=dialog.VectorColor;Render();
+        v.Name=dialog.VectorName;v.Components=dialog.Components;v.Color=dialog.VectorColor;v.ComponentXColor=dialog.ComponentXColor;v.ComponentYColor=dialog.ComponentYColor;v.ComponentZColor=dialog.ComponentZColor;Render();
     }
     private void RemoveClicked(object sender,RoutedEventArgs e)
     {if(VectorGrid.SelectedItem is VectorItem v){v.PropertyChanged-=VectorChanged;_vectors.Remove(v);Render();}}
@@ -119,13 +138,13 @@ public partial class MainWindow : Window
                     axisEnds[axis]=Project(axis==0?c[0]:0,axis==1?c[1]:0,axis==2?c[2]:0,cx,cy);
                 }
                 // Disegnare prima le costruzioni tratteggiate.
-                if(Dim==2)
+                if(GuidesCheck.IsChecked==true && Dim==2)
                 {
                     var xy=p;
-                    AddLine(axisEnds[0],xy,color,1.1,false,true);
-                    AddLine(axisEnds[1],xy,color,1.1,false,true);
+                    AddLine(axisEnds[0],xy,v.GetComponentColor(1),1.1,false,true);
+                    AddLine(axisEnds[1],xy,v.GetComponentColor(0),1.1,false,true);
                 }
-                else if(Dim==3)
+                else if(GuidesCheck.IsChecked==true && Dim==3)
                 {
                     // Piano xy: O, X, Y, XY. Poi elevazione da XY a XYZ.
                     var xy=Project(c[0],c[1],0,cx,cy);
@@ -133,22 +152,22 @@ public partial class MainWindow : Window
                     var yz=Project(0,c[1],c[2],cx,cy);
                     AddLine(axisEnds[0],xy,color,1.1,false,true);
                     AddLine(axisEnds[1],xy,color,1.1,false,true);
-                    AddLine(xy,p,color,1.1,false,true);
+                    AddLine(xy,p,v.GetComponentColor(2),1.1,false,true);
                     // Altri due percorsi paralleli agli assi, utili a
                     // rendere leggibile il parallelepipedo in prospettiva.
-                    AddLine(axisEnds[0],xz,color,0.9,false,true);
-                    AddLine(axisEnds[2],xz,color,0.9,false,true);
-                    AddLine(xz,p,color,0.9,false,true);
-                    AddLine(axisEnds[1],yz,color,0.9,false,true);
-                    AddLine(axisEnds[2],yz,color,0.9,false,true);
-                    AddLine(yz,p,color,0.9,false,true);
+                    AddLine(axisEnds[0],xz,v.GetComponentColor(2),0.9,false,true);
+                    AddLine(axisEnds[2],xz,v.GetComponentColor(0),0.9,false,true);
+                    AddLine(xz,p,v.GetComponentColor(1),0.9,false,true);
+                    AddLine(axisEnds[1],yz,v.GetComponentColor(2),0.9,false,true);
+                    AddLine(axisEnds[2],yz,v.GetComponentColor(1),0.9,false,true);
+                    AddLine(yz,p,v.GetComponentColor(0),0.9,false,true);
                 }
                 for(int axis=0;axis<Dim;axis++)
                 {
                     var end=axisEnds[axis];
                     if(Point.Subtract(end,origin).Length<0.01)continue;
                     // Frecce componenti continue, spesse e visibili sugli assi.
-                    AddLine(origin,end,color,3.2,true);
+                    AddLine(origin,end,v.GetComponentColor(axis),3.2,true);
                     if(NamesCheck.IsChecked==true)
                     {
                         var dx=end.X-cx;var dy=end.Y-cy;
@@ -156,7 +175,7 @@ public partial class MainWindow : Window
                         var nx=length>0.01?-dy/length:0;
                         var ny=length>0.01?dx/length:0;
                         var middle=new Point(cx+dx*0.65+nx*13,cy+dy*0.65+ny*13);
-                        _labels.Add(new Caption(middle.X,middle.Y,v.Name,color,13,"xyz"[axis].ToString()));
+                        _labels.Add(new Caption(middle.X,middle.Y,v.Name,v.GetComponentColor(axis),13,"xyz"[axis].ToString()));
                     }
                 }
             }
@@ -226,19 +245,40 @@ public partial class MainWindow : Window
     {
         VectorGrid.CommitEdit(DataGridEditingUnit.Row,true);
         var dlg=new SaveFileDialog{Filter="VectorDraw JSON (*.json)|*.json",FileName="progetto.json"};
-        if(dlg.ShowDialog()==true){var p=new ProjectData(Dim,Scale,_yaw,_pitch,GridCheck.IsChecked==true,NamesCheck.IsChecked==true,_vectors.ToList(),ComponentsCheck.IsChecked==true);
-            File.WriteAllText(dlg.FileName,JsonSerializer.Serialize(p,new JsonSerializerOptions{WriteIndented=true}));Status.Text="Progetto salvato.";}
+        if(dlg.ShowDialog()==true){var p=new ProjectData(Dim,Scale,_yaw,_pitch,GridCheck.IsChecked==true,NamesCheck.IsChecked==true,_vectors.ToList(),ComponentsCheck.IsChecked==true,GuidesCheck.IsChecked==true);
+            File.WriteAllText(dlg.FileName,JsonSerializer.Serialize(p,new JsonSerializerOptions{WriteIndented=true}));RememberProject(dlg.FileName);Status.Text="Progetto salvato.";}
     }
     private void OpenClicked(object sender,RoutedEventArgs e)
     {
         var dlg=new OpenFileDialog{Filter="VectorDraw JSON (*.json)|*.json"};if(dlg.ShowDialog()!=true)return;
+        LoadProject(dlg.FileName);
+    }
+    private static void RememberProject(string filename)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(LastProjectPointer)!);
+        File.WriteAllText(LastProjectPointer,Path.GetFullPath(filename));
+    }
+    private void LoadLastProject()
+    {
+        try
+        {
+            if(!File.Exists(LastProjectPointer))return;
+            var filename=File.ReadAllText(LastProjectPointer).Trim();
+            if(File.Exists(filename))LoadProject(filename);
+        }
+        catch(Exception ex){Status.Text="Ultimo progetto non caricato: "+ex.Message;}
+    }
+    private void LoadProject(string filename)
+    {
         try{
-            var p=JsonSerializer.Deserialize<ProjectData>(File.ReadAllText(dlg.FileName))??throw new InvalidDataException("Progetto vuoto");
+            var p=JsonSerializer.Deserialize<ProjectData>(File.ReadAllText(filename))??throw new InvalidDataException("Progetto vuoto");
             if(p.Dimension is <1 or >3)throw new InvalidDataException("Dimensione non valida");
             foreach(var v in _vectors)v.PropertyChanged-=VectorChanged;
             _vectors.Clear();foreach(var v in p.Vectors){v.PropertyChanged+=VectorChanged;_vectors.Add(v);}
-            DimensionBox.SelectedIndex=p.Dimension-1;ScaleSlider.Value=p.Scale;_yaw=p.Yaw;_pitch=p.Pitch;
-            GridCheck.IsChecked=p.Grid;NamesCheck.IsChecked=p.Names;ComponentsCheck.IsChecked=p.ComponentsVisible;Render();Status.Text="Progetto caricato.";
+            _loadingProject=true;
+            try{DimensionBox.SelectedIndex=p.Dimension-1;_previousDim=p.Dimension;}finally{_loadingProject=false;}
+            ScaleSlider.Value=p.Scale;_yaw=p.Yaw;_pitch=p.Pitch;
+            GridCheck.IsChecked=p.Grid;NamesCheck.IsChecked=p.Names;ComponentsCheck.IsChecked=p.ComponentsVisible;GuidesCheck.IsChecked=p.GuidesVisible;RememberProject(filename);Render();Status.Text="Progetto caricato.";
         }catch(Exception ex){MessageBox.Show("Impossibile aprire il progetto: "+ex.Message,"VectorDraw",MessageBoxButton.OK,MessageBoxImage.Error);}
     }
 }
