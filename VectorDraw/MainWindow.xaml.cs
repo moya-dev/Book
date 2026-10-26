@@ -32,7 +32,7 @@ public partial class MainWindow : Window
     private bool _loadingProject;
     private static readonly string LastProjectPointer=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),"VectorDraw","last-project.txt");
     private sealed record ProjectData(int Dimension, double Scale, double Yaw, double Pitch, bool Grid, bool Names, List<VectorItem> Vectors, bool ComponentsVisible=false, bool GuidesVisible=true, List<CurveLine>? Curves=null);
-    private sealed record Segment(double X1,double Y1,double X2,double Y2,string Color,double Width,bool Arrow=false,bool Dashed=false);
+    private sealed record Segment(double X1,double Y1,double X2,double Y2,string Color,double Width,bool Arrow=false,bool Dashed=false,bool Dotted=false);
     private sealed record Caption(double X,double Y,string Text,string Color,int Size=14,string Subscript="");
     private sealed record CurveLine(double X1,double Y1,double Z1,double X2,double Y2,double Z2,string Color);
     private readonly List<CurveLine> _curves=new();
@@ -454,8 +454,8 @@ public partial class MainWindow : Window
         var sy=x*sinA*sinE+y*cosA*sinE+z*cosE;
         return new(cx+sx*Scale,cy-sy*Scale);
     }
-    private void AddLine(Point a,Point b,string color,double width=1,bool arrow=false,bool dashed=false)
-        =>_segments.Add(new(a.X,a.Y,b.X,b.Y,color,width,arrow,dashed));
+    private void AddLine(Point a,Point b,string color,double width=1,bool arrow=false,bool dashed=false,bool dotted=false)
+        =>_segments.Add(new(a.X,a.Y,b.X,b.Y,color,width,arrow,dashed,dotted));
     private void Build(double width,double height)
     {
         _segments.Clear();_labels.Clear();
@@ -543,7 +543,7 @@ public partial class MainWindow : Window
             var a=Project(curve.X1,curve.Y1,curve.Z1,cx,cy);
             var b=Project(curve.X2,curve.Y2,curve.Z2,cx,cy);
             if(double.IsFinite(a.X)&&double.IsFinite(a.Y)&&double.IsFinite(b.X)&&double.IsFinite(b.Y))
-                AddLine(a,b,curve.Color,2,dashed:Dim==3);
+                AddLine(a,b,curve.Color,2,dotted:Dim==3);
         }
         Status.Text=invalid>0?$"{invalid} vettore/i con componenti non valide per ℝ{Dim}.":$"ℝ{Dim} · {_vectors.Count} vettori";
     }
@@ -568,6 +568,26 @@ public partial class MainWindow : Window
                 var dot=new Ellipse{Width=8,Height=8,Fill=brush};
                 Canvas.SetLeft(dot,s.X1-4);Canvas.SetTop(dot,s.Y1-4);
                 DrawingCanvas.Children.Add(dot);
+            }
+            else if(s.Dotted)
+            {
+                // Un solo punto ogni 12 px, condividendo la griglia globale per
+                // non sovraccaricare le superfici composte da molti segmenti corti.
+                const double spacing=12;
+                var dx=s.X2-s.X1;var dy=s.Y2-s.Y1;
+                var length=Math.Sqrt(dx*dx+dy*dy);
+                if(length>=spacing)
+                {
+                    int count=(int)Math.Floor(length/spacing);
+                    for(int k=0;k<=count;k++)
+                    {
+                        var t=(k*spacing)/length;
+                        var dot=new Ellipse{Width=2.5,Height=2.5,Fill=brush};
+                        Canvas.SetLeft(dot,s.X1+t*dx-1.25);
+                        Canvas.SetTop(dot,s.Y1+t*dy-1.25);
+                        DrawingCanvas.Children.Add(dot);
+                    }
+                }
             }
             else DrawingCanvas.Children.Add(new Line{X1=s.X1,Y1=s.Y1,X2=s.X2,Y2=s.Y2,Stroke=brush,StrokeThickness=s.Width,StrokeDashArray=s.Dashed?new DoubleCollection{5,4}:null});
             if(s.Arrow){var pts=Arrow(new(s.X1,s.Y1),new(s.X2,s.Y2),10);
@@ -599,6 +619,20 @@ public partial class MainWindow : Window
             var dashAttribute = s.Dashed ? " stroke-dasharray=\'5 4\'" : "";
             if(Math.Abs(s.X1-s.X2)<1e-8&&Math.Abs(s.Y1-s.Y2)<1e-8&&!s.Arrow)
                 sb.AppendLine($"  <circle cx=\"{F(s.X1)}\" cy=\"{F(s.Y1)}\" r=\"4\" fill=\"{Xml(s.Color)}\" />");
+            else if(s.Dotted)
+            {
+                var dx=s.X2-s.X1;var dy=s.Y2-s.Y1;
+                var length=Math.Sqrt(dx*dx+dy*dy);
+                if(length>=12)
+                {
+                    int count=(int)Math.Floor(length/12);
+                    for(int k=0;k<=count;k++)
+                    {
+                        var t=k*12/length;
+                        sb.AppendLine($"  <circle cx=\"{F(s.X1+t*dx)}\" cy=\"{F(s.Y1+t*dy)}\" r=\"1.25\" fill=\"{Xml(s.Color)}\" />");
+                    }
+                }
+            }
             else sb.AppendLine($"  <line x1=\"{F(s.X1)}\" y1=\"{F(s.Y1)}\" x2=\"{F(s.X2)}\" y2=\"{F(s.Y2)}\" stroke=\"{Xml(s.Color)}\" stroke-width=\"{F(s.Width)}\"{dashAttribute} />");
             if(s.Arrow){var pts=Arrow(new(s.X1,s.Y1),new(s.X2,s.Y2),10);
                 if(pts.Length>0)sb.AppendLine($"  <polygon points=\"{string.Join(" ",pts.Select(p=>$"{F(p.X)},{F(p.Y)}"))}\" fill=\"{Xml(s.Color)}\" />");}
