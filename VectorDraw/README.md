@@ -54,3 +54,17 @@ Dopo aver eseguito il calcolo nella sottoscheda **Risultato**, attivare **Disegn
 - La matrice può contenere fino a 10 vettori; sono usati i 10 colori distinti della palette.
 - Il trasferimento **sostituisce** i vettori presenti nell'elenco e nel canvas (non è un semplice nascondimento), imposta ℝ¹/ℝ²/ℝ³ e seleziona il tab dei grafici.
 - Il file JSON già salvato su disco resta invariato finché l'utente non preme **Salva progetto**.
+
+## Zoom adattivo del canvas
+Il canvas permette di ingrandire e rimpicciolire il contenuto con i pulsanti **+**, **−**, lo slider **Scala** e la rotellina del mouse. Il pulsante **Adatta vettori** calcola la scala in base all'ingombro proiettato dei vettori, con margini del 39% per semiasse. Anche i vettori molto lunghi possono così essere visualizzati rimpicciolendo lo spazio. Dopo l'importazione dei vettori da una matrice, l'adattamento viene eseguito automaticamente.
+
+## Sostituzione o aggiunta dei vettori da una matrice
+Nella sottoscheda **Risultato**, dopo il calcolo, scegliere **Sostituisci vettori esistenti** (predefinito) oppure **Aggiungi ai vettori esistenti**, quindi **Trasferisci al canvas**.
+- **Sostituisci**: rimuove i vettori precedenti, adegua ℝ alla dimensione del risultato e crea i nuovi vettori.
+- **Aggiungi**: conserva i vettori e la dimensione corrente del canvas; richiede che la dimensione corrente sia maggiore o uguale a quella dei vettori importati. Le componenti mancanti vengono completate con zero (es. ℝ² → ℝ³: (x,y,0)).
+- Se la dimensione del risultato supera quella del canvas, compare un avviso e non viene effettuata alcuna modifica.
+- I colori non ancora usati nella palette hanno priorità; quando sono esauriti vengono riutilizzati. I nuovi nomi sono univoci.
+- Dopo il trasferimento la vista si adatta automaticamente ai vettori.
+
+## Equazioni e curve sul canvas
+Il tab **Funzioni** permette di inserire un'equazione, un intervallo e un colore. **Disegna sul canvas** aggiunge il risultato ai vettori e alle curve presenti. Sono disponibili funzioni esplicite 2D (`y=f(x)`, `x=f(y)`), curve implicite 2D (`x^2+y^2=25`) e superfici esplicite 3D (`z=f(x,y)`, rappresentate con reticolo). Funzioni: `sin`, `cos`, `tan`, `asin`, `acos`, `atan`, `sqrt`, `abs`, `exp`, `ln`, `log`, `floor`, `ceil`; costanti `pi` ed `e`. La moltiplicazione richiede `*`. Le superfici implicite 3D non sono ancora supportate. Il tab **Vettori e grafici** dispone di **Ripulisci canvas** per cancellare vettori e curve. I risultati delle matrici vengono sempre aggiunti al canvas, ampliando la dimensione se necessario. Le curve sono salvate nel JSON del progetto ed esportate nell'SVG.
