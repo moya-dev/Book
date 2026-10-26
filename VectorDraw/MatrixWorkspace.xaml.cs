@@ -19,9 +19,8 @@ public partial class MatrixWorkspace : UserControl
     private CheckBox _showOnCanvas=null!;
     private RadioButton _byColumns=null!, _byRows=null!;
     private StackPanel _drawOptions=null!;
-    private RadioButton _replace=null!, _append=null!;
     private double[,]? _lastResult;
-    public event Action<double[,],bool,bool>? DrawResultRequested;
+    public event Action<double[,],bool>? DrawResultRequested;
     public MatrixWorkspace()
     {
         InitializeComponent();
@@ -62,13 +61,6 @@ public partial class MatrixWorkspace : UserControl
         _byColumns.Checked+=(_,_)=>UpdateDrawOptions();
         _byRows.Checked+=(_,_)=>UpdateDrawOptions();
         _drawOptions.Children.Add(_byColumns);_drawOptions.Children.Add(_byRows);top.Children.Add(_drawOptions);
-        var modePanel=new StackPanel{Orientation=Orientation.Horizontal,Margin=new Thickness(0,0,0,10)};
-        _replace=new RadioButton{GroupName="CanvasImportMode",IsChecked=true,Margin=new Thickness(0,0,18,0)};
-        _append=new RadioButton{GroupName="CanvasImportMode"};
-        modePanel.Children.Add(_replace);modePanel.Children.Add(_append);
-        top.Children.Add(modePanel);
-        _replace.Checked+=(_,_)=>UpdateDrawOptions();
-        _append.Checked+=(_,_)=>UpdateDrawOptions();
         _draw=new Button{Padding=new Thickness(12,7),HorizontalAlignment=HorizontalAlignment.Left,Margin=new Thickness(0,0,0,12)};
         _draw.Click+=DrawClicked;top.Children.Add(_draw);
         UpdateDrawOptions();
@@ -95,7 +87,7 @@ public partial class MatrixWorkspace : UserControl
             _status.Text=I18n.T("Il vettore deve avere da 1 a 3 componenti.");
             return;
         }
-        DrawResultRequested?.Invoke((double[,])_lastResult.Clone(),columns,_append.IsChecked==true);
+        DrawResultRequested?.Invoke((double[,])_lastResult.Clone(),columns);
     }
     private void RebuildTabs()
     {
@@ -175,8 +167,6 @@ public partial class MatrixWorkspace : UserControl
         _byColumns.Content=I18n.T("Vettori nelle colonne");
         _byRows.Content=I18n.T("Vettori nelle righe");
         _draw.Content=I18n.T("Trasferisci al canvas");
-        _replace.Content=I18n.T("Sostituisci vettori esistenti");
-        _append.Content=I18n.T("Aggiungi ai vettori esistenti");
         RefreshOperations();ClearResult();
     }
     private void ClearResult()
