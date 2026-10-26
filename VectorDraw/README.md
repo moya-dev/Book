@@ -57,3 +57,11 @@ Dopo aver eseguito il calcolo nella sottoscheda **Risultato**, attivare **Disegn
 
 ## Zoom adattivo del canvas
 Il canvas permette di ingrandire e rimpicciolire il contenuto con i pulsanti **+**, **−**, lo slider **Scala** e la rotellina del mouse. Il pulsante **Adatta vettori** calcola la scala in base all'ingombro proiettato dei vettori, con margini del 39% per semiasse. Anche i vettori molto lunghi possono così essere visualizzati rimpicciolendo lo spazio. Dopo l'importazione dei vettori da una matrice, l'adattamento viene eseguito automaticamente.
+
+## Sostituzione o aggiunta dei vettori da una matrice
+Nella sottoscheda **Risultato**, dopo il calcolo, scegliere **Sostituisci vettori esistenti** (predefinito) oppure **Aggiungi ai vettori esistenti**, quindi **Trasferisci al canvas**.
+- **Sostituisci**: rimuove i vettori precedenti, adegua ℝ alla dimensione del risultato e crea i nuovi vettori.
+- **Aggiungi**: conserva i vettori e la dimensione corrente del canvas; richiede che la dimensione corrente sia maggiore o uguale a quella dei vettori importati. Le componenti mancanti vengono completate con zero (es. ℝ² → ℝ³: (x,y,0)).
+- Se la dimensione del risultato supera quella del canvas, compare un avviso e non viene effettuata alcuna modifica.
+- I colori non ancora usati nella palette hanno priorità; quando sono esauriti vengono riutilizzati. I nuovi nomi sono univoci.
+- Dopo il trasferimento la vista si adatta automaticamente ai vettori.
