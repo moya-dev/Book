@@ -31,7 +31,7 @@ public partial class MainWindow : Window
         _vectors.Add(new VectorItem{Name="u",Components="3; 2",Color="#D94848"});
         _vectors.Add(new VectorItem{Name="v",Components="-2; 3",Color="#2563EB"});
         foreach(var v in _vectors) v.PropertyChanged+=VectorChanged;
-        _ready=true; LoadLastProject(); Render();
+        _ready=true; LoadLastProject(); I18n.TranslateTree(MainTabs); Matrices.SetLanguage(); Render();
     }
     private int Dim=>DimensionBox.SelectedIndex+1;
     private double Scale=>ScaleSlider.Value;
@@ -54,6 +54,18 @@ public partial class MainWindow : Window
         Render();
     }
     private void CanvasResized(object sender,SizeChangedEventArgs e)=>Render();
+    private void CanvasWheel(object sender,MouseWheelEventArgs e)
+    {
+        ScaleSlider.Value=Math.Clamp(ScaleSlider.Value*(e.Delta>0?1.12:1/1.12),ScaleSlider.Minimum,ScaleSlider.Maximum);
+        e.Handled=true;
+    }
+    private void LanguageChanged(object sender,SelectionChangedEventArgs e)
+    {
+        if(!_ready||LanguageBox.SelectedItem is not ComboBoxItem item)return;
+        I18n.Set(item.Tag?.ToString()??"it");
+        I18n.TranslateTree(MainTabs);
+        Matrices.SetLanguage();
+    }
     private void AddClicked(object sender,RoutedEventArgs e)
     {
         var dialog=new VectorDialog(Dim){Owner=this};
