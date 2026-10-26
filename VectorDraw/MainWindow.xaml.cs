@@ -20,7 +20,7 @@ public partial class MainWindow : Window
     private int _previousDim=2;
     private bool _loadingProject;
     private static readonly string LastProjectPointer=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),"VectorDraw","last-project.txt");
-    private sealed record ProjectData(int Dimension, double Scale, double Yaw, double Pitch, bool Grid, bool Names, List<VectorItem> Vectors, bool ComponentsVisible=false, bool GuidesVisible=true);
+    private sealed record ProjectData(int Dimension, double Scale, double Yaw, double Pitch, bool Grid, bool Names, List<VectorItem> Vectors, bool ComponentsVisible=false, bool GuidesVisible=true, List<CurveLine>? Curves=null);
     private sealed record Segment(double X1,double Y1,double X2,double Y2,string Color,double Width,bool Arrow=false,bool Dashed=false);
     private sealed record Caption(double X,double Y,string Text,string Color,int Size=14,string Subscript="");
     private sealed record CurveLine(double X1,double Y1,double Z1,double X2,double Y2,double Z2,string Color);
@@ -47,13 +47,6 @@ public partial class MainWindow : Window
         int count=byColumns?matrix.GetLength(1):matrix.GetLength(0);
         if(dim is <1 or >3||count<1)return;
         int canvasDim=Math.Max(Dim,dim);
-        if(false)
-        {
-            MessageBox.Show(this,
-                $"I vettori del risultato sono in ℝ{dim}, ma il canvas è in ℝ{canvasDim}. Seleziona uno spazio di dimensione almeno {dim} oppure usa Sostituisci.",
-                "Dimensioni incompatibili",MessageBoxButton.OK,MessageBoxImage.Warning);
-            return;
-        }
         if(canvasDim!=Dim)
         {
             // Amplia lo spazio mantenendo i vettori esistenti, completati con zeri.
@@ -94,7 +87,7 @@ public partial class MainWindow : Window
         MainTabs.SelectedIndex=0;
         Dispatcher.BeginInvoke(new Action(FitVectorsToCanvas),System.Windows.Threading.DispatcherPriority.Loaded);
         Render();
-        Status.Text=$"ℝ{canvasDim} · {count} vettori {"aggiunti"} dalla matrice risultato.";
+        Status.Text=$"ℝ{canvasDim} · {count} vettori aggiunti dalla matrice risultato.";
     }
     private int Dim=>DimensionBox.SelectedIndex+1;
     private double Scale=>ScaleSlider.Value;
@@ -489,7 +482,7 @@ public partial class MainWindow : Window
     {
         VectorGrid.CommitEdit(DataGridEditingUnit.Row,true);
         var dlg=new SaveFileDialog{Filter="VectorDraw JSON (*.json)|*.json",FileName="progetto.json"};
-        if(dlg.ShowDialog()==true){var p=new ProjectData(Dim,Scale,_yaw,_pitch,GridCheck.IsChecked==true,NamesCheck.IsChecked==true,_vectors.ToList(),ComponentsCheck.IsChecked==true,GuidesCheck.IsChecked==true);
+        if(dlg.ShowDialog()==true){var p=new ProjectData(Dim,Scale,_yaw,_pitch,GridCheck.IsChecked==true,NamesCheck.IsChecked==true,_vectors.ToList(),ComponentsCheck.IsChecked==true,GuidesCheck.IsChecked==true,_curves.ToList());
             File.WriteAllText(dlg.FileName,JsonSerializer.Serialize(p,new JsonSerializerOptions{WriteIndented=true}));RememberProject(dlg.FileName);Status.Text="Progetto salvato.";}
     }
     private void OpenClicked(object sender,RoutedEventArgs e)
@@ -518,7 +511,7 @@ public partial class MainWindow : Window
             var p=JsonSerializer.Deserialize<ProjectData>(File.ReadAllText(filename))??throw new InvalidDataException("Progetto vuoto");
             if(p.Dimension is <1 or >3)throw new InvalidDataException("Dimensione non valida");
             foreach(var v in _vectors)v.PropertyChanged-=VectorChanged;
-            _vectors.Clear();foreach(var v in p.Vectors){v.PropertyChanged+=VectorChanged;_vectors.Add(v);}
+            _vectors.Clear();_curves.Clear();if(p.Curves is not null)_curves.AddRange(p.Curves);foreach(var v in p.Vectors){v.PropertyChanged+=VectorChanged;_vectors.Add(v);}
             _loadingProject=true;
             try{DimensionBox.SelectedIndex=p.Dimension-1;_previousDim=p.Dimension;}finally{_loadingProject=false;}
             ScaleSlider.Value=p.Scale;_yaw=p.Yaw;_pitch=p.Pitch;
