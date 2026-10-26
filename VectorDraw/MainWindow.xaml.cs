@@ -23,6 +23,8 @@ public partial class MainWindow : Window
     private sealed record ProjectData(int Dimension, double Scale, double Yaw, double Pitch, bool Grid, bool Names, List<VectorItem> Vectors, bool ComponentsVisible=false, bool GuidesVisible=true);
     private sealed record Segment(double X1,double Y1,double X2,double Y2,string Color,double Width,bool Arrow=false,bool Dashed=false);
     private sealed record Caption(double X,double Y,string Text,string Color,int Size=14,string Subscript="");
+    private sealed record CurveLine(double X1,double Y1,double Z1,double X2,double Y2,double Z2,string Color);
+    private readonly List<CurveLine> _curves=new();
     private readonly List<Segment> _segments=new();
     private readonly List<Caption> _labels=new();
     public MainWindow()
@@ -39,26 +41,31 @@ public partial class MainWindow : Window
         "#D94848","#2563EB","#15936A","#EA580C","#9333EA",
         "#0891B2","#DB2777","#111827","#64748B","#CA8A04"
     };
-    private void ImportMatrixVectors(double[,] matrix,bool byColumns,bool append)
+    private void ImportMatrixVectors(double[,] matrix,bool byColumns)
     {
         int dim=byColumns?matrix.GetLength(0):matrix.GetLength(1);
         int count=byColumns?matrix.GetLength(1):matrix.GetLength(0);
         if(dim is <1 or >3||count<1)return;
-        int canvasDim=append?Dim:dim;
-        if(append&&canvasDim<dim)
+        int canvasDim=Math.Max(Dim,dim);
+        if(false)
         {
             MessageBox.Show(this,
                 $"I vettori del risultato sono in ℝ{dim}, ma il canvas è in ℝ{canvasDim}. Seleziona uno spazio di dimensione almeno {dim} oppure usa Sostituisci.",
                 "Dimensioni incompatibili",MessageBoxButton.OK,MessageBoxImage.Warning);
             return;
         }
-        if(!append)
+        if(canvasDim!=Dim)
         {
-            foreach(var old in _vectors)old.PropertyChanged-=VectorChanged;
-            _vectors.Clear();
+            // Amplia lo spazio mantenendo i vettori esistenti, completati con zeri.
             _loadingProject=true;
-            try{DimensionBox.SelectedIndex=dim-1;_previousDim=dim;}
+            try{DimensionBox.SelectedIndex=canvasDim-1;_previousDim=canvasDim;}
             finally{_loadingProject=false;}
+            foreach(var old in _vectors)
+            {
+                var parts=old.Components.Split(';',StringSplitOptions.TrimEntries).ToList();
+                while(parts.Count<canvasDim)parts.Add("0");
+                old.Components=string.Join("; ",parts);
+            }
         }
         var usedColors=new HashSet<string>(_vectors.Select(v=>v.Color),StringComparer.OrdinalIgnoreCase);
         var usedNames=new HashSet<string>(_vectors.Select(v=>v.Name),StringComparer.OrdinalIgnoreCase);
@@ -87,7 +94,7 @@ public partial class MainWindow : Window
         MainTabs.SelectedIndex=0;
         Dispatcher.BeginInvoke(new Action(FitVectorsToCanvas),System.Windows.Threading.DispatcherPriority.Loaded);
         Render();
-        Status.Text=$"ℝ{canvasDim} · {count} vettori {(append?"aggiunti":"importati")} dalla matrice risultato.";
+        Status.Text=$"ℝ{canvasDim} · {count} vettori {"aggiunti"} dalla matrice risultato.";
     }
     private int Dim=>DimensionBox.SelectedIndex+1;
     private double Scale=>ScaleSlider.Value;
@@ -167,6 +174,121 @@ public partial class MainWindow : Window
         I18n.Set(item.Tag?.ToString()??"it");
         I18n.TranslateTree(MainTabs);
         Matrices.SetLanguage();
+    }
+    private void ClearCanvasClicked(object sender,RoutedEventArgs e)
+    {
+        foreach(var v in _vectors)v.PropertyChanged-=VectorChanged;
+        _vectors.Clear();_curves.Clear();Render();
+        Status.Text="Canvas ripulito.";
+    }
+    private void PlotEquationClicked(object sender,RoutedEventArgs e)
+    {
+        try
+        {
+            var input=EquationBox.Text.Trim();
+            var parts=input.Split('=',2);
+            if(parts.Length!=2)throw new FormatException("Inserisci un'equazione con =.");
+            if(!double.TryParse(RangeMinBox.Text,NumberStyles.Float,CultureInfo.CurrentCulture,out var min)&&
+               !double.TryParse(RangeMinBox.Text,NumberStyles.Float,CultureInfo.InvariantCulture,out min))
+                throw new FormatException("Limite minimo non valido.");
+            if(!double.TryParse(RangeMaxBox.Text,NumberStyles.Float,CultureInfo.CurrentCulture,out var max)&&
+               !double.TryParse(RangeMaxBox.Text,NumberStyles.Float,CultureInfo.InvariantCulture,out max))
+                throw new FormatException("Limite massimo non valido.");
+            if(!double.IsFinite(min)||!double.IsFinite(max)||max<=min||max-min>100000)
+                throw new FormatException("Intervallo non valido.");
+            var color=EquationColorBox.Text.Trim();
+            if(!TryColor(color,out _))throw new FormatException("Colore non valido.");
+            var left=parts[0].Trim().ToLowerInvariant();
+            var right=parts[1].Trim().ToLowerInvariant();
+            int required=left=="z"?3:2;
+            var generated=new List<CurveLine>();
+            void Add(double x1,double y1,double z1,double x2,double y2,double z2)
+            {
+                if(new[]{x1,y1,z1,x2,y2,z2}.All(double.IsFinite)&&generated.Count<30000)
+                    generated.Add(new CurveLine(x1,y1,z1,x2,y2,z2,color));
+            }
+            const int n=180;
+            var step=(max-min)/n;
+            if(left=="y"&&!right.Contains('y')&&!right.Contains('z'))
+            {
+                var expr=new EquationEngine(right);
+                for(int i=0;i<n;i++)
+                {
+                    var x=min+i*step;var y1=expr.Evaluate(x);var y2=expr.Evaluate(x+step);
+                    if(Math.Abs(y2-y1)<(max-min)*3)Add(x,y1,0,x+step,y2,0);
+                }
+            }
+            else if(left=="x"&&!right.Contains('x')&&!right.Contains('z'))
+            {
+                var expr=new EquationEngine(right);
+                for(int i=0;i<n;i++)
+                {
+                    var y=min+i*step;var x1=expr.Evaluate(0,y);var x2=expr.Evaluate(0,y+step);
+                    if(Math.Abs(x2-x1)<(max-min)*3)Add(x1,y,0,x2,y+step,0);
+                }
+            }
+            else if(left=="z"&&!right.Contains('z'))
+            {
+                var expr=new EquationEngine(right);
+                const int mesh=55;
+                var delta=(max-min)/mesh;
+                for(int i=0;i<=mesh;i++)for(int j=0;j<=mesh;j++)
+                {
+                    var x=min+i*delta;var y=min+j*delta;var z=expr.Evaluate(x,y);
+                    if(i<mesh){var z2=expr.Evaluate(x+delta,y);if(Math.Abs(z2-z)<(max-min)*4)Add(x,y,z,x+delta,y,z2);}
+                    if(j<mesh){var z2=expr.Evaluate(x,y+delta);if(Math.Abs(z2-z)<(max-min)*4)Add(x,y,z,x,y+delta,z2);}
+                }
+            }
+            else
+            {
+                // Curve implicite 2D: contorni di F(x,y)=0 con marching squares.
+                var expr=new EquationEngine("("+left+")-("+right+")");
+                var values=new double[n+1,n+1];
+                for(int i=0;i<=n;i++)for(int j=0;j<=n;j++)
+                    values[i,j]=expr.Evaluate(min+i*step,min+j*step);
+                for(int i=0;i<n;i++)for(int j=0;j<n;j++)
+                {
+                    double x=min+i*step,y=min+j*step;
+                    var corners=new (double X,double Y,double V)[]
+                    {
+                        (x,y,values[i,j]),(x+step,y,values[i+1,j]),
+                        (x+step,y+step,values[i+1,j+1]),(x,y+step,values[i,j+1])
+                    };
+                    var hits=new List<(double X,double Y)>();
+                    for(int k=0;k<4;k++)
+                    {
+                        var a=corners[k];var b=corners[(k+1)%4];
+                        if(!double.IsFinite(a.V)||!double.IsFinite(b.V)||((a.V<0)==(b.V<0)))continue;
+                        var t=a.V/(a.V-b.V);
+                        hits.Add((a.X+t*(b.X-a.X),a.Y+t*(b.Y-a.Y)));
+                    }
+                    for(int k=0;k+1<hits.Count;k+=2)
+                        Add(hits[k].X,hits[k].Y,0,hits[k+1].X,hits[k+1].Y,0);
+                }
+            }
+            if(generated.Count==0)throw new InvalidOperationException("Nessuna curva trovata nell'intervallo indicato.");
+            if(required>Dim)
+            {
+                _loadingProject=true;
+                try{DimensionBox.SelectedIndex=required-1;_previousDim=required;}
+                finally{_loadingProject=false;}
+                foreach(var v in _vectors)
+                {
+                    var components=v.Components.Split(';',StringSplitOptions.TrimEntries).ToList();
+                    while(components.Count<required)components.Add("0");
+                    v.Components=string.Join("; ",components);
+                }
+            }
+            _curves.AddRange(generated);
+            MainTabs.SelectedIndex=0;
+            Render();
+            EquationStatus.Text=$"Equazione disegnata: {generated.Count} segmenti.";
+        }
+        catch(Exception ex)
+        {
+            EquationStatus.Text="Errore: "+ex.Message;
+            MessageBox.Show(this,ex.Message,"Equazione non valida",MessageBoxButton.OK,MessageBoxImage.Warning);
+        }
     }
     private void AddClicked(object sender,RoutedEventArgs e)
     {
@@ -296,6 +418,13 @@ public partial class MainWindow : Window
             }
             AddLine(new(cx,cy),p,color,2.6,true);
             if(NamesCheck.IsChecked==true)_labels.Add(new Caption(p.X+8,p.Y-8,v.Name,color,15));
+        }
+        foreach(var curve in _curves)
+        {
+            var a=Project(curve.X1,curve.Y1,curve.Z1,cx,cy);
+            var b=Project(curve.X2,curve.Y2,curve.Z2,cx,cy);
+            if(double.IsFinite(a.X)&&double.IsFinite(a.Y)&&double.IsFinite(b.X)&&double.IsFinite(b.Y))
+                AddLine(a,b,curve.Color,2);
         }
         Status.Text=invalid>0?$"{invalid} vettore/i con componenti non valide per ℝ{Dim}.":$"ℝ{Dim} · {_vectors.Count} vettori";
     }
