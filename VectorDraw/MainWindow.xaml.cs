@@ -543,7 +543,7 @@ public partial class MainWindow : Window
             var a=Project(curve.X1,curve.Y1,curve.Z1,cx,cy);
             var b=Project(curve.X2,curve.Y2,curve.Z2,cx,cy);
             if(double.IsFinite(a.X)&&double.IsFinite(a.Y)&&double.IsFinite(b.X)&&double.IsFinite(b.Y))
-                AddLine(a,b,curve.Color,2);
+                AddLine(a,b,curve.Color,2,dashed:Dim==3);
         }
         Status.Text=invalid>0?$"{invalid} vettore/i con componenti non valide per ℝ{Dim}.":$"ℝ{Dim} · {_vectors.Count} vettori";
     }
