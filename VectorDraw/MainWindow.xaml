@@ -9,7 +9,7 @@
 <TextBlock Text="Vettori (doppio clic per modificare)" FontWeight="SemiBold" Margin="0,0,0,6"/>
 </StackPanel>
 <StackPanel DockPanel.Dock="Bottom" Margin="0,12,0,0">
-<WrapPanel Margin="0,0,0,8"><Button Content="+ Aggiungi" Click="AddClicked" Padding="10,6" Margin="0,0,8,0"/><Button Content="Modifica" Click="EditClicked" Padding="10,6" Margin="0,0,8,0"/><Button Content="− Rimuovi" Click="RemoveClicked" Padding="10,6"/></WrapPanel>
+<Button Content="Ripulisci canvas" Click="ClearCanvasClicked" Padding="10,6" Margin="0,0,0,8"/><WrapPanel Margin="0,0,0,8"><Button Content="+ Aggiungi" Click="AddClicked" Padding="10,6" Margin="0,0,8,0"/><Button Content="Modifica" Click="EditClicked" Padding="10,6" Margin="0,0,8,0"/><Button Content="− Rimuovi" Click="RemoveClicked" Padding="10,6"/></WrapPanel>
 <CheckBox x:Name="GridCheck" Content="Mostra griglia" IsChecked="True" Click="SettingsChanged" Margin="0,0,0,7"/>
 <CheckBox x:Name="ComponentsCheck" Content="Mostra vettori componenti" IsChecked="False" Click="SettingsChanged" Margin="0,0,0,7"/><CheckBox x:Name="GuidesCheck" Content="Tratteggi del parallelepipedo" IsChecked="True" Click="SettingsChanged" Margin="0,0,0,7"/><CheckBox x:Name="NamesCheck" Content="Mostra nomi" IsChecked="True" Click="SettingsChanged" Margin="0,0,0,7"/>
 <TextBlock Text="Scala"/><Slider x:Name="ScaleSlider" Minimum="0.001" Maximum="10000" Value="45" ValueChanged="SettingsChanged" Margin="0,0,0,10"/>
@@ -23,4 +23,13 @@
 </DataGrid>
 </DockPanel>
 <Border Grid.Column="2" BorderBrush="#CBD5E1" BorderThickness="1" Background="White" CornerRadius="6"><Canvas x:Name="DrawingCanvas" ClipToBounds="True" SizeChanged="CanvasResized" MouseLeftButtonDown="CanvasDown" MouseLeftButtonUp="CanvasUp" MouseMove="CanvasMove" MouseWheel="CanvasWheel"/></Border>
-</Grid></TabItem><TabItem Header="Matrici"><local:MatrixWorkspace x:Name="Matrices"/></TabItem></TabControl></DockPanel></Window>
+</Grid></TabItem><TabItem Header="Funzioni"><ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="20" MaxWidth="620" HorizontalAlignment="Left">
+<TextBlock Text="Equazione (usa * per moltiplicare e ^ per le potenze)" TextWrapping="Wrap" Margin="0,0,0,8"/>
+<TextBox x:Name="EquationBox" Text="y = x^2 - 2*x - 3" FontSize="17" Padding="8" Width="480" HorizontalAlignment="Left"/>
+<TextBlock Text="Esempi: y=sin(x), x^2+y^2=25, z=sin(x)*cos(y)" Margin="0,8,0,14" TextWrapping="Wrap"/>
+<TextBlock Text="Intervallo di disegno (coordinate)" Margin="0,0,0,6"/>
+<StackPanel Orientation="Horizontal"><TextBox x:Name="RangeMinBox" Text="-10" Width="90" Padding="6"/><TextBlock Text=" a " VerticalAlignment="Center" Margin="8,0"/><TextBox x:Name="RangeMaxBox" Text="10" Width="90" Padding="6"/></StackPanel>
+<TextBlock Text="Colore (es. #9333EA)" Margin="0,14,0,6"/><TextBox x:Name="EquationColorBox" Text="#9333EA" Width="130" Padding="6" HorizontalAlignment="Left"/>
+<Button Content="Disegna sul canvas" Click="PlotEquationClicked" Padding="14,9" Margin="0,20,0,0" HorizontalAlignment="Left"/>
+<TextBlock x:Name="EquationStatus" TextWrapping="Wrap" Margin="0,14,0,0"/>
+</StackPanel></ScrollViewer></TabItem><TabItem Header="Matrici"><local:MatrixWorkspace x:Name="Matrices"/></TabItem></TabControl></DockPanel></Window>
