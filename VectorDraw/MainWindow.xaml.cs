@@ -149,6 +149,19 @@ public partial class MainWindow : Window
                 }
             }
         }
+        foreach(var curve in _curves)
+        {
+            var a=Project(curve.X1,curve.Y1,curve.Z1,0,0);
+            var b=Project(curve.X2,curve.Y2,curve.Z2,0,0);
+            foreach(var p in new[]{a,b})
+            {
+                if(double.IsFinite(p.X)&&double.IsFinite(p.Y))
+                {
+                    maxX=Math.Max(maxX,Math.Abs(p.X/Scale));
+                    maxY=Math.Max(maxY,Math.Abs(p.Y/Scale));
+                }
+            }
+        }
         if(maxX<1e-12&&maxY<1e-12)return;
         // Lascia un margine per frecce e nomi; riduce o ingrandisce secondo necessità.
         var desired=Math.Min(maxX<1e-12?double.PositiveInfinity:width*0.39/maxX,
@@ -234,6 +247,8 @@ public partial class MainWindow : Window
             }
             else
             {
+                if(left.Contains('z')||right.Contains('z'))
+                    throw new NotSupportedException("Le superfici implicite 3D non sono ancora supportate. Usa z=f(x,y).");
                 // Curve implicite 2D: contorni di F(x,y)=0 con marching squares.
                 var expr=new EquationEngine("("+left+")-("+right+")");
                 var values=new double[n+1,n+1];
@@ -274,6 +289,7 @@ public partial class MainWindow : Window
             }
             _curves.AddRange(generated);
             MainTabs.SelectedIndex=0;
+            Dispatcher.BeginInvoke(new Action(FitVectorsToCanvas),System.Windows.Threading.DispatcherPriority.Loaded);
             Render();
             EquationStatus.Text=$"Equazione disegnata: {generated.Count} segmenti.";
         }
