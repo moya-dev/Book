@@ -13,7 +13,7 @@ namespace VectorDraw;
 public partial class MainWindow : Window
 {
     private readonly ObservableCollection<VectorItem> _vectors = new();
-    private double _yaw=-0.65, _pitch=0.48;
+    private double _yaw=-0.78, _pitch=0.62;
     private Point? _drag;
     private bool _ready;
     private sealed record ProjectData(int Dimension, double Scale, double Yaw, double Pitch, bool Grid, bool Names, List<VectorItem> Vectors, bool ComponentsVisible=false);
@@ -64,13 +64,20 @@ public partial class MainWindow : Window
         if(result.Any(x=>!double.IsFinite(x)))return false;
         numbers=result;return true;
     }
+    // Camera ortografica: base ottenuta da rotazioni rigide 3D.
+    // I vettori di base restano ortogonali in R3 prima della proiezione.
     private Point Project(double x,double y,double z,double cx,double cy)
     {
         if(Dim==1)return new(cx+x*Scale,cy);
         if(Dim==2)return new(cx+x*Scale,cy-y*Scale);
-        var a=x*Math.Cos(_yaw)-y*Math.Sin(_yaw);
-        var b=x*Math.Sin(_yaw)+y*Math.Cos(_yaw);
-        return new(cx+a*Scale,cy+(b*Math.Sin(_pitch)-z*Math.Cos(_pitch))*Scale);
+        var cosA=Math.Cos(_yaw);var sinA=Math.Sin(_yaw);
+        var cosE=Math.Cos(_pitch);var sinE=Math.Sin(_pitch);
+        // Rotazione attorno a z seguita da elevazione della camera.
+        // Orizzontale camera = (cosA,-sinA,0)
+        // Verticale camera   = (sinA*sinE,cosA*sinE,cosE)
+        var sx=x*cosA-y*sinA;
+        var sy=x*sinA*sinE+y*cosA*sinE+z*cosE;
+        return new(cx+sx*Scale,cy-sy*Scale);
     }
     private void AddLine(Point a,Point b,string color,double width=1,bool arrow=false,bool dashed=false)
         =>_segments.Add(new(a.X,a.Y,b.X,b.Y,color,width,arrow,dashed));
@@ -189,7 +196,7 @@ public partial class MainWindow : Window
     {
         if(_drag is not Point old||Dim!=3)return;
         var now=e.GetPosition(DrawingCanvas);_yaw+=(now.X-old.X)*.009;
-        _pitch=Math.Clamp(_pitch+(now.Y-old.Y)*.009,-1.45,1.45);_drag=now;Render();
+        _pitch=Math.Clamp(_pitch+(now.Y-old.Y)*.009,0.12,1.45);_drag=now;Render();
     }
     private static string F(double v)=>v.ToString("0.###",CultureInfo.InvariantCulture);
     private static string Xml(string? s)=>System.Security.SecurityElement.Escape(s??"")??"";
