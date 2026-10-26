@@ -53,7 +53,7 @@ public partial class MainWindow : Window
         EquationBox.Text=selected.Equation;
         RangeMinBox.Text=selected.Minimum.ToString("R",CultureInfo.InvariantCulture);
         RangeMaxBox.Text=selected.Maximum.ToString("R",CultureInfo.InvariantCulture);
-        EquationColorBox.SelectedItem=CurvePalette.FirstOrDefault(p=>p.Hex.Equals(selected.Color,StringComparison.OrdinalIgnoreCase))??CurvePalette[4];
+        EquationColorBox.SelectedItem=EquationColorBox.Items.OfType<PaletteColor>().FirstOrDefault(p=>p.Hex.Equals(selected.Color,StringComparison.OrdinalIgnoreCase));
         EquationStatus.Text=I18n.T("Modifica i campi e premi Salva modifiche.");
         SaveCurveButton.Content=I18n.T("Salva modifiche");
     }
@@ -227,8 +227,10 @@ public partial class MainWindow : Window
         I18n.Set(item.Tag?.ToString()??"it");
         I18n.TranslateTree(this);
         Matrices.SetLanguage();
-        EquationColorBox.ItemsSource=CurvePalette;
-        if(EquationColorBox.SelectedItem is not PaletteColor)EquationColorBox.SelectedIndex=4;
+        var selectedHex=(EquationColorBox.SelectedItem as PaletteColor)?.Hex??"#9333EA";
+        var palette=CurvePalette;
+        EquationColorBox.ItemsSource=palette;
+        EquationColorBox.SelectedItem=palette.FirstOrDefault(p=>p.Hex.Equals(selectedHex,StringComparison.OrdinalIgnoreCase))??palette[4];
         SaveCurveButton.Content=I18n.T(_editingCurve is null?"+ Aggiungi":"Salva modifiche");
         I18n.TranslateColumns(VectorGrid);
         I18n.TranslateColumns(CurveGrid);
