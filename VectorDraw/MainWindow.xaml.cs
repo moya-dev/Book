@@ -31,16 +31,47 @@ public partial class MainWindow : Window
     private int _previousDim=2;
     private bool _loadingProject;
     private static readonly string LastProjectPointer=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),"VectorDraw","last-project.txt");
-    private sealed record ProjectData(int Dimension, double Scale, double Yaw, double Pitch, bool Grid, bool Names, List<VectorItem> Vectors, bool ComponentsVisible=false, bool GuidesVisible=true, List<CurveLine>? Curves=null);
+    private sealed record ProjectData(int Dimension, double Scale, double Yaw, double Pitch, bool Grid, bool Names, List<VectorItem> Vectors, bool ComponentsVisible=false, bool GuidesVisible=true, List<CurveLine>? Curves=null, List<CurveDefinition>? CurveDefinitions=null);
     private sealed record Segment(double X1,double Y1,double X2,double Y2,string Color,double Width,bool Arrow=false,bool Dashed=false,bool Dotted=false);
     private sealed record Caption(double X,double Y,string Text,string Color,int Size=14,string Subscript="");
     private sealed record CurveLine(double X1,double Y1,double Z1,double X2,double Y2,double Z2,string Color);
+    private sealed record CurveDefinition(string Equation,double Minimum,double Maximum,string Color,List<CurveLine> Segments);
+    private readonly ObservableCollection<CurveDefinition> _curveDefinitions=new();
+    private CurveDefinition? _editingCurve;
     private readonly List<CurveLine> _curves=new();
+    private void RebuildCurves()
+    {
+        _curves.Clear();
+        foreach(var curve in _curveDefinitions)_curves.AddRange(curve.Segments);
+        Render();
+    }
+    private void CurveDoubleClicked(object sender,MouseButtonEventArgs e)=>EditCurveClicked(sender,e);
+    private void EditCurveClicked(object sender,RoutedEventArgs e)
+    {
+        if(CurveGrid.SelectedItem is not CurveDefinition selected)return;
+        _editingCurve=selected;
+        EquationBox.Text=selected.Equation;
+        RangeMinBox.Text=selected.Minimum.ToString("R",CultureInfo.InvariantCulture);
+        RangeMaxBox.Text=selected.Maximum.ToString("R",CultureInfo.InvariantCulture);
+        EquationColorBox.SelectedItem=CurvePalette.FirstOrDefault(p=>p.Hex.Equals(selected.Color,StringComparison.OrdinalIgnoreCase))??CurvePalette[4];
+        EquationStatus.Text="Modifica i campi e premi Salva modifiche.";
+        SaveCurveButton.Content="Salva modifiche";
+    }
+    private void RemoveCurveClicked(object sender,RoutedEventArgs e)
+    {
+        if(CurveGrid.SelectedItem is not CurveDefinition selected)return;
+        if(ReferenceEquals(_editingCurve,selected))_editingCurve=null;
+        _curveDefinitions.Remove(selected);
+        SaveCurveButton.Content="+ Aggiungi";
+        RebuildCurves();
+        EquationStatus.Text="Curva rimossa.";
+    }
     private readonly List<Segment> _segments=new();
     private readonly List<Caption> _labels=new();
     public MainWindow()
     {
         InitializeComponent(); VectorGrid.ItemsSource=_vectors;
+        CurveGrid.ItemsSource=_curveDefinitions;
         EquationColorBox.ItemsSource=CurvePalette;
         EquationColorBox.SelectedIndex=4;
         _vectors.Add(new VectorItem{Name="u",Components="3; 2",Color="#D94848"});
@@ -197,7 +228,7 @@ public partial class MainWindow : Window
     private void ClearCanvasClicked(object sender,RoutedEventArgs e)
     {
         foreach(var v in _vectors)v.PropertyChanged-=VectorChanged;
-        _vectors.Clear();_curves.Clear();Render();
+        _vectors.Clear();_curves.Clear();_curveDefinitions.Clear();_editingCurve=null;SaveCurveButton.Content="+ Aggiungi";Render();
         Status.Text="Canvas ripulito.";
     }
     private static void PlotImplicitSurface(EquationEngine expression,double min,double max,Action<double,double,double,double,double,double> add)
@@ -397,7 +428,18 @@ public partial class MainWindow : Window
                     v.Components=string.Join("; ",components);
                 }
             }
-            _curves.AddRange(generated);
+            var definition=new CurveDefinition(input,min,max,color,generated);
+            if(_editingCurve is not null)
+            {
+                var index=_curveDefinitions.IndexOf(_editingCurve);
+                if(index>=0)_curveDefinitions[index]=definition;
+                else _curveDefinitions.Add(definition);
+                _editingCurve=null;
+                SaveCurveButton.Content="+ Aggiungi";
+            }
+            else _curveDefinitions.Add(definition);
+            CurveGrid.SelectedItem=definition;
+            RebuildCurves();
             MainTabs.SelectedIndex=0;
             Dispatcher.BeginInvoke(new Action(FitVectorsToCanvas),System.Windows.Threading.DispatcherPriority.Loaded);
             Render();
@@ -650,7 +692,7 @@ public partial class MainWindow : Window
     {
         VectorGrid.CommitEdit(DataGridEditingUnit.Row,true);
         var dlg=new SaveFileDialog{Filter="VectorDraw JSON (*.json)|*.json",FileName="progetto.json"};
-        if(dlg.ShowDialog()==true){var p=new ProjectData(Dim,Scale,_yaw,_pitch,GridCheck.IsChecked==true,NamesCheck.IsChecked==true,_vectors.ToList(),ComponentsCheck.IsChecked==true,GuidesCheck.IsChecked==true,_curves.ToList());
+        if(dlg.ShowDialog()==true){var p=new ProjectData(Dim,Scale,_yaw,_pitch,GridCheck.IsChecked==true,NamesCheck.IsChecked==true,_vectors.ToList(),ComponentsCheck.IsChecked==true,GuidesCheck.IsChecked==true,_curves.ToList(),_curveDefinitions.ToList());
             File.WriteAllText(dlg.FileName,JsonSerializer.Serialize(p,new JsonSerializerOptions{WriteIndented=true}));RememberProject(dlg.FileName);Status.Text="Progetto salvato.";}
     }
     private void OpenClicked(object sender,RoutedEventArgs e)
@@ -679,7 +721,19 @@ public partial class MainWindow : Window
             var p=JsonSerializer.Deserialize<ProjectData>(File.ReadAllText(filename))??throw new InvalidDataException("Progetto vuoto");
             if(p.Dimension is <1 or >3)throw new InvalidDataException("Dimensione non valida");
             foreach(var v in _vectors)v.PropertyChanged-=VectorChanged;
-            _vectors.Clear();_curves.Clear();if(p.Curves is not null)_curves.AddRange(p.Curves);foreach(var v in p.Vectors){v.PropertyChanged+=VectorChanged;_vectors.Add(v);}
+            _vectors.Clear();_curves.Clear();_curveDefinitions.Clear();_editingCurve=null;
+            if(p.CurveDefinitions is {Count:>0})
+            {
+                foreach(var definition in p.CurveDefinitions)_curveDefinitions.Add(definition);
+                foreach(var definition in _curveDefinitions)_curves.AddRange(definition.Segments);
+            }
+            else if(p.Curves is {Count:>0})
+            {
+                // I progetti precedenti non contenevano l'equazione originale.
+                _curveDefinitions.Add(new CurveDefinition("Curva importata (equazione non disponibile)",-10,10,p.Curves[0].Color,p.Curves));
+                _curves.AddRange(p.Curves);
+            }
+            SaveCurveButton.Content="+ Aggiungi";foreach(var v in p.Vectors){v.PropertyChanged+=VectorChanged;_vectors.Add(v);}
             _loadingProject=true;
             try{DimensionBox.SelectedIndex=p.Dimension-1;_previousDim=p.Dimension;}finally{_loadingProject=false;}
             ScaleSlider.Value=p.Scale;_yaw=p.Yaw;_pitch=p.Pitch;
