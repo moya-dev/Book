@@ -5,7 +5,7 @@ namespace VectorDraw;
 public partial class VectorDialog : Window
 {
     private sealed record PaletteColor(string Name,string Hex)
-    {public Brush Brush => new SolidColorBrush((Color)ColorConverter.ConvertFromString(Hex)!);}
+    {public Brush Brush => string.IsNullOrWhiteSpace(Hex) ? Brushes.Transparent : new SolidColorBrush((Color)ColorConverter.ConvertFromString(Hex)!);}
     private static readonly PaletteColor[] Palette =
     {
         new(I18n.T("Rosso"),"#D94848"),new(I18n.T("Blu"),"#2563EB"),new(I18n.T("Verde"),"#15936A"),
@@ -59,9 +59,9 @@ public partial class VectorDialog : Window
         }
         VectorName=name;Components=string.Join("; ",values);
         VectorColor=((PaletteColor)ColorBox.SelectedItem!).Hex;
-        ComponentXColor=((PaletteColor)XColorBox.SelectedItem!).Hex;
-        ComponentYColor=((PaletteColor)YColorBox.SelectedItem!).Hex;
-        ComponentZColor=((PaletteColor)ZColorBox.SelectedItem!).Hex;
+        ComponentXColor=(XColorBox.SelectedItem as PaletteColor)?.Hex ?? "";
+        ComponentYColor=(YColorBox.SelectedItem as PaletteColor)?.Hex ?? "";
+        ComponentZColor=(ZColorBox.SelectedItem as PaletteColor)?.Hex ?? "";
         DialogResult=true;
     }
 }
