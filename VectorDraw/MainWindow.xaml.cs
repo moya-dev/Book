@@ -512,7 +512,7 @@ public partial class MainWindow : Window
     private void Build(double width,double height)
     {
         _segments.Clear();_labels.Clear();
-        var cx=width/2;var cy=height/2;var extent=Math.Max(1,Math.Min(width,height)/Scale*0.38);
+        var cx=width/2;var cy=height/2;
         if(GridCheck.IsChecked==true && Dim<=2)
         {
             var n=(int)Math.Min(100,Math.Ceiling(Math.Max(width,height)/Scale));
@@ -523,12 +523,32 @@ public partial class MainWindow : Window
                 if(Dim==1)break;
             }
         }
-        AddLine(Project(-extent,0,0,cx,cy),Project(extent,0,0,cx,cy),"#475569",1.5,true);
-        _labels.Add(new Caption(Project(extent,0,0,cx,cy).X+5,Project(extent,0,0,cx,cy).Y+15,"x","#334155"));
-        if(Dim>=2){AddLine(Project(0,-extent,0,cx,cy),Project(0,extent,0,cx,cy),"#475569",1.5,true);
-            var p=Project(0,extent,0,cx,cy);_labels.Add(new Caption(p.X+5,p.Y-5,"y","#334155"));}
-        if(Dim==3){AddLine(Project(0,0,-extent,cx,cy),Project(0,0,extent,cx,cy),"#475569",1.5,true);
-            var p=Project(0,0,extent,cx,cy);_labels.Add(new Caption(p.X+5,p.Y-5,"z","#334155"));}
+        // Ogni asse raggiunge quasi il bordo del canvas nella direzione proiettata.
+        // Non dipende dalla lunghezza dei vettori né dall'orientamento della vista 3D.
+        const double axisMargin=24;
+        void DrawAxis(int axis,string name)
+        {
+            var origin=Project(0,0,0,cx,cy);
+            var unit=Project(axis==0?1:0,axis==1?1:0,axis==2?1:0,cx,cy);
+            var dx=unit.X-origin.X;
+            var dy=unit.Y-origin.Y;
+            if(!double.IsFinite(dx)||!double.IsFinite(dy))return;
+            // La proiezione può annullare una direzione vista di punta.
+            if(Math.Abs(dx)<1e-9&&Math.Abs(dy)<1e-9)return;
+            var halfW=Math.Max(0,width/2-axisMargin);
+            var halfH=Math.Max(0,height/2-axisMargin);
+            var tx=Math.Abs(dx)>1e-9?halfW/Math.Abs(dx):double.PositiveInfinity;
+            var ty=Math.Abs(dy)>1e-9?halfH/Math.Abs(dy):double.PositiveInfinity;
+            var extent=Math.Min(tx,ty);
+            if(!double.IsFinite(extent)||extent<=0)return;
+            var negative=Project(axis==0?-extent:0,axis==1?-extent:0,axis==2?-extent:0,cx,cy);
+            var positive=Project(axis==0?extent:0,axis==1?extent:0,axis==2?extent:0,cx,cy);
+            AddLine(negative,positive,"#475569",1.5,true);
+            _labels.Add(new Caption(positive.X+5,positive.Y+(axis==0?15:-5),name,"#334155"));
+        }
+        DrawAxis(0,"x");
+        if(Dim>=2)DrawAxis(1,"y");
+        if(Dim==3)DrawAxis(2,"z");
         var invalid=0;
         foreach(var v in _vectors)
         {
