@@ -18,7 +18,7 @@ public partial class MainWindow : Window
     {
         public Brush Brush => new SolidColorBrush((Color)ColorConverter.ConvertFromString(Hex)!);
     }
-    private static PaletteColor[] CurvePalette =>
+    private static PaletteColor[] CurvePalette => new PaletteColor[]
     {
         new(I18n.T("Rosso"),"#D94848"),new(I18n.T("Blu"),"#2563EB"),new(I18n.T("Verde"),"#15936A"),
         new(I18n.T("Arancione"),"#EA580C"),new(I18n.T("Viola"),"#9333EA"),new(I18n.T("Azzurro"),"#0891B2"),
@@ -324,9 +324,9 @@ public partial class MainWindow : Window
             {
                 var definitions=input.Split(';',StringSplitOptions.RemoveEmptyEntries|StringSplitOptions.TrimEntries);
                 var expressions=new Dictionary<string,EquationEngine>(StringComparer.OrdinalIgnoreCase);
-                foreach(var definition in definitions)
+                foreach(var coordinateDefinition in definitions)
                 {
-                    var assignment=definition.Split('=',2,StringSplitOptions.TrimEntries);
+                    var assignment=coordinateDefinition.Split('=',2,StringSplitOptions.TrimEntries);
                     if(assignment.Length!=2||assignment[0] is not ("x" or "y" or "z")||expressions.ContainsKey(assignment[0]))
                         throw new FormatException(I18n.T("Usa x=...; y=...; z=... con una definizione per coordinata."));
                     expressions.Add(assignment[0],new EquationEngine(assignment[1]));
