@@ -18,12 +18,12 @@ public partial class MainWindow : Window
     {
         public Brush Brush => new SolidColorBrush((Color)ColorConverter.ConvertFromString(Hex)!);
     }
-    private static readonly PaletteColor[] CurvePalette =
+    private static PaletteColor[] CurvePalette =>
     {
-        new("Rosso","#D94848"),new("Blu","#2563EB"),new("Verde","#15936A"),
-        new("Arancione","#EA580C"),new("Viola","#9333EA"),new("Azzurro","#0891B2"),
-        new("Magenta","#DB2777"),new("Nero","#111827"),new("Grigio","#64748B"),
-        new("Giallo ocra","#CA8A04")
+        new(I18n.T("Rosso"),"#D94848"),new(I18n.T("Blu"),"#2563EB"),new(I18n.T("Verde"),"#15936A"),
+        new(I18n.T("Arancione"),"#EA580C"),new(I18n.T("Viola"),"#9333EA"),new(I18n.T("Azzurro"),"#0891B2"),
+        new(I18n.T("Magenta"),"#DB2777"),new(I18n.T("Nero"),"#111827"),new(I18n.T("Grigio"),"#64748B"),
+        new(I18n.T("Giallo ocra"),"#CA8A04")
     };
     private double _yaw=-0.78, _pitch=0.62;
     private Point? _drag;
@@ -53,18 +53,18 @@ public partial class MainWindow : Window
         EquationBox.Text=selected.Equation;
         RangeMinBox.Text=selected.Minimum.ToString("R",CultureInfo.InvariantCulture);
         RangeMaxBox.Text=selected.Maximum.ToString("R",CultureInfo.InvariantCulture);
-        EquationColorBox.SelectedItem=CurvePalette.FirstOrDefault(p=>p.Hex.Equals(selected.Color,StringComparison.OrdinalIgnoreCase))??CurvePalette[4];
-        EquationStatus.Text="Modifica i campi e premi Salva modifiche.";
-        SaveCurveButton.Content="Salva modifiche";
+        EquationColorBox.SelectedItem=EquationColorBox.Items.OfType<PaletteColor>().FirstOrDefault(p=>p.Hex.Equals(selected.Color,StringComparison.OrdinalIgnoreCase));
+        EquationStatus.Text=I18n.T("Modifica i campi e premi Salva modifiche.");
+        SaveCurveButton.Content=I18n.T("Salva modifiche");
     }
     private void RemoveCurveClicked(object sender,RoutedEventArgs e)
     {
         if(CurveGrid.SelectedItem is not CurveDefinition selected)return;
         if(ReferenceEquals(_editingCurve,selected))_editingCurve=null;
         _curveDefinitions.Remove(selected);
-        SaveCurveButton.Content="+ Aggiungi";
+        SaveCurveButton.Content=I18n.T("+ Aggiungi");
         RebuildCurves();
-        EquationStatus.Text="Curva rimossa.";
+        EquationStatus.Text=I18n.T("Curva rimossa.");
     }
     private readonly List<Segment> _segments=new();
     private readonly List<Caption> _labels=new();
@@ -78,7 +78,10 @@ public partial class MainWindow : Window
         _vectors.Add(new VectorItem{Name="v",Components="-2; 3",Color="#2563EB"});
         foreach(var v in _vectors) v.PropertyChanged+=VectorChanged;
         Matrices.DrawResultRequested+=ImportMatrixVectors;
-        _ready=true; LoadLastProject(); I18n.TranslateTree(MainTabs); Matrices.SetLanguage(); Render();
+        var defaultLanguage=I18n.Language;
+        foreach(var option in LanguageBox.Items.OfType<ComboBoxItem>())
+            if((string?)option.Tag==defaultLanguage){LanguageBox.SelectedItem=option;break;}
+        _ready=true; LoadLastProject(); I18n.TranslateTree(this); Title=I18n.T("VectorDraw — Grafici vettoriali SVG"); I18n.TranslateColumns(VectorGrid); I18n.TranslateColumns(CurveGrid); Matrices.SetLanguage(); Render();
     }
     private static readonly string[] MatrixVectorColors=
     {
@@ -131,7 +134,7 @@ public partial class MainWindow : Window
         MainTabs.SelectedIndex=0;
         Dispatcher.BeginInvoke(new Action(FitVectorsToCanvas),System.Windows.Threading.DispatcherPriority.Loaded);
         Render();
-        Status.Text=$"ℝ{canvasDim} · {count} vettori aggiunti dalla matrice risultato.";
+        Status.Text=string.Format(I18n.T("ℝ{0} · {1} vettori aggiunti dalla matrice risultato."),canvasDim,count);
     }
     private int Dim=>DimensionBox.SelectedIndex+1;
     private double Scale=>ScaleSlider.Value;
@@ -222,14 +225,22 @@ public partial class MainWindow : Window
     {
         if(!_ready||LanguageBox.SelectedItem is not ComboBoxItem item)return;
         I18n.Set(item.Tag?.ToString()??"it");
-        I18n.TranslateTree(MainTabs);
+        I18n.TranslateTree(this);
+        Title=I18n.T("VectorDraw — Grafici vettoriali SVG");
         Matrices.SetLanguage();
+        var selectedHex=(EquationColorBox.SelectedItem as PaletteColor)?.Hex??"#9333EA";
+        var palette=CurvePalette;
+        EquationColorBox.ItemsSource=palette;
+        EquationColorBox.SelectedItem=palette.FirstOrDefault(p=>p.Hex.Equals(selectedHex,StringComparison.OrdinalIgnoreCase))??palette[4];
+        SaveCurveButton.Content=I18n.T(_editingCurve is null?"+ Aggiungi":"Salva modifiche");
+        I18n.TranslateColumns(VectorGrid);
+        I18n.TranslateColumns(CurveGrid);
     }
     private void ClearCanvasClicked(object sender,RoutedEventArgs e)
     {
         foreach(var v in _vectors)v.PropertyChanged-=VectorChanged;
-        _vectors.Clear();_curves.Clear();_curveDefinitions.Clear();_editingCurve=null;SaveCurveButton.Content="+ Aggiungi";Render();
-        Status.Text="Canvas ripulito.";
+        _vectors.Clear();_curves.Clear();_curveDefinitions.Clear();_editingCurve=null;SaveCurveButton.Content=I18n.T("+ Aggiungi");Render();
+        Status.Text=I18n.T("Canvas ripulito.");
     }
     private static void PlotImplicitSurface(EquationEngine expression,double min,double max,Action<double,double,double,double,double,double> add)
     {
@@ -286,17 +297,17 @@ public partial class MainWindow : Window
         {
             var input=EquationBox.Text.Trim();
             var parts=input.Split('=',2);
-            if(parts.Length!=2)throw new FormatException("Inserisci un'equazione con =.");
+            if(parts.Length!=2)throw new FormatException(I18n.T("Inserisci un'equazione con =."));
             if(!double.TryParse(RangeMinBox.Text,NumberStyles.Float,CultureInfo.CurrentCulture,out var min)&&
                !double.TryParse(RangeMinBox.Text,NumberStyles.Float,CultureInfo.InvariantCulture,out min))
-                throw new FormatException("Limite minimo non valido.");
+                throw new FormatException(I18n.T("Limite minimo non valido."));
             if(!double.TryParse(RangeMaxBox.Text,NumberStyles.Float,CultureInfo.CurrentCulture,out var max)&&
                !double.TryParse(RangeMaxBox.Text,NumberStyles.Float,CultureInfo.InvariantCulture,out max))
-                throw new FormatException("Limite massimo non valido.");
+                throw new FormatException(I18n.T("Limite massimo non valido."));
             if(!double.IsFinite(min)||!double.IsFinite(max)||max<=min||max-min>100000)
-                throw new FormatException("Intervallo non valido.");
+                throw new FormatException(I18n.T("Intervallo non valido."));
             var color=(EquationColorBox.SelectedItem as PaletteColor)?.Hex ?? "#9333EA";
-            if(!TryColor(color,out _))throw new FormatException("Colore non valido.");
+            if(!TryColor(color,out _))throw new FormatException(I18n.T("Colore non valido."));
             var left=parts[0].Trim().ToLowerInvariant();
             var right=parts[1].Trim().ToLowerInvariant();
             bool parametric=input.Contains(';');
@@ -317,10 +328,10 @@ public partial class MainWindow : Window
                 {
                     var assignment=definition.Split('=',2,StringSplitOptions.TrimEntries);
                     if(assignment.Length!=2||assignment[0] is not ("x" or "y" or "z")||expressions.ContainsKey(assignment[0]))
-                        throw new FormatException("Usa x=...; y=...; z=... con una definizione per coordinata.");
+                        throw new FormatException(I18n.T("Usa x=...; y=...; z=... con una definizione per coordinata."));
                     expressions.Add(assignment[0],new EquationEngine(assignment[1]));
                 }
-                if(expressions.Count!=3)throw new FormatException("La curva parametrica richiede x(t), y(t) e z(t).");
+                if(expressions.Count!=3)throw new FormatException(I18n.T("La curva parametrica richiede x(t), y(t) e z(t)."));
                 const int samples=1200;
                 var dt=(max-min)/samples;
                 for(int i=0;i<samples;i++)
@@ -415,7 +426,7 @@ public partial class MainWindow : Window
                 }
             }
             }
-            if(generated.Count==0)throw new InvalidOperationException("Nessuna curva trovata nell'intervallo indicato.");
+            if(generated.Count==0)throw new InvalidOperationException(I18n.T("Nessuna curva trovata nell'intervallo indicato."));
             if(required>Dim)
             {
                 _loadingProject=true;
@@ -443,12 +454,12 @@ public partial class MainWindow : Window
             MainTabs.SelectedIndex=0;
             Dispatcher.BeginInvoke(new Action(FitVectorsToCanvas),System.Windows.Threading.DispatcherPriority.Loaded);
             Render();
-            EquationStatus.Text=$"Equazione disegnata: {generated.Count} segmenti.";
+            EquationStatus.Text=string.Format(I18n.T("Equazione disegnata: {0} segmenti."),generated.Count);
         }
         catch(Exception ex)
         {
-            EquationStatus.Text="Errore: "+ex.Message;
-            MessageBox.Show(this,ex.Message,"Equazione non valida",MessageBoxButton.OK,MessageBoxImage.Warning);
+            EquationStatus.Text=I18n.T("Errore")+": "+ex.Message;
+            MessageBox.Show(this,ex.Message,I18n.T("Equazione non valida"),MessageBoxButton.OK,MessageBoxImage.Warning);
         }
     }
     private void AddClicked(object sender,RoutedEventArgs e)
@@ -587,7 +598,7 @@ public partial class MainWindow : Window
             if(double.IsFinite(a.X)&&double.IsFinite(a.Y)&&double.IsFinite(b.X)&&double.IsFinite(b.Y))
                 AddLine(a,b,curve.Color,2,dotted:Dim==3);
         }
-        Status.Text=invalid>0?$"{invalid} vettore/i con componenti non valide per ℝ{Dim}.":$"ℝ{Dim} · {_vectors.Count} vettori";
+        Status.Text=invalid>0?string.Format(I18n.T("{0} vettore/i con componenti non valide per ℝ{1}."),invalid,Dim):string.Format(I18n.T("ℝ{0} · {1} vettori"),Dim,_vectors.Count);
     }
     private static bool TryColor(string text,out Color color)
     {try{color=(Color)ColorConverter.ConvertFromString(text)!;return true;}catch{color=Colors.SeaGreen;return false;}}
@@ -686,14 +697,14 @@ public partial class MainWindow : Window
     {
         VectorGrid.CommitEdit(DataGridEditingUnit.Row,true);
         var dlg=new SaveFileDialog{Filter="SVG (*.svg)|*.svg",FileName="vettori.svg"};
-        if(dlg.ShowDialog()==true){File.WriteAllText(dlg.FileName,MakeSvg(Math.Max(600,DrawingCanvas.ActualWidth),Math.Max(450,DrawingCanvas.ActualHeight)));Status.Text="SVG esportato: "+dlg.FileName;}
+        if(dlg.ShowDialog()==true){File.WriteAllText(dlg.FileName,MakeSvg(Math.Max(600,DrawingCanvas.ActualWidth),Math.Max(450,DrawingCanvas.ActualHeight)));Status.Text=I18n.T("SVG esportato: ")+dlg.FileName;}
     }
     private void SaveClicked(object sender,RoutedEventArgs e)
     {
         VectorGrid.CommitEdit(DataGridEditingUnit.Row,true);
         var dlg=new SaveFileDialog{Filter="VectorDraw JSON (*.json)|*.json",FileName="progetto.json"};
         if(dlg.ShowDialog()==true){var p=new ProjectData(Dim,Scale,_yaw,_pitch,GridCheck.IsChecked==true,NamesCheck.IsChecked==true,_vectors.ToList(),ComponentsCheck.IsChecked==true,GuidesCheck.IsChecked==true,_curves.ToList(),_curveDefinitions.ToList());
-            File.WriteAllText(dlg.FileName,JsonSerializer.Serialize(p,new JsonSerializerOptions{WriteIndented=true}));RememberProject(dlg.FileName);Status.Text="Progetto salvato.";}
+            File.WriteAllText(dlg.FileName,JsonSerializer.Serialize(p,new JsonSerializerOptions{WriteIndented=true}));RememberProject(dlg.FileName);Status.Text=I18n.T("Progetto salvato.");}
     }
     private void OpenClicked(object sender,RoutedEventArgs e)
     {
@@ -713,13 +724,13 @@ public partial class MainWindow : Window
             var filename=File.ReadAllText(LastProjectPointer).Trim();
             if(File.Exists(filename))LoadProject(filename);
         }
-        catch(Exception ex){Status.Text="Ultimo progetto non caricato: "+ex.Message;}
+        catch(Exception ex){Status.Text=I18n.T("Ultimo progetto non caricato: ")+ex.Message;}
     }
     private void LoadProject(string filename)
     {
         try{
-            var p=JsonSerializer.Deserialize<ProjectData>(File.ReadAllText(filename))??throw new InvalidDataException("Progetto vuoto");
-            if(p.Dimension is <1 or >3)throw new InvalidDataException("Dimensione non valida");
+            var p=JsonSerializer.Deserialize<ProjectData>(File.ReadAllText(filename))??throw new InvalidDataException(I18n.T("Progetto vuoto"));
+            if(p.Dimension is <1 or >3)throw new InvalidDataException(I18n.T("Dimensione non valida"));
             foreach(var v in _vectors)v.PropertyChanged-=VectorChanged;
             _vectors.Clear();_curves.Clear();_curveDefinitions.Clear();_editingCurve=null;
             if(p.CurveDefinitions is {Count:>0})
@@ -737,7 +748,7 @@ public partial class MainWindow : Window
             _loadingProject=true;
             try{DimensionBox.SelectedIndex=p.Dimension-1;_previousDim=p.Dimension;}finally{_loadingProject=false;}
             ScaleSlider.Value=p.Scale;_yaw=p.Yaw;_pitch=p.Pitch;
-            GridCheck.IsChecked=p.Grid;NamesCheck.IsChecked=p.Names;ComponentsCheck.IsChecked=p.ComponentsVisible;GuidesCheck.IsChecked=p.GuidesVisible;RememberProject(filename);Render();Status.Text="Progetto caricato.";
-        }catch(Exception ex){MessageBox.Show("Impossibile aprire il progetto: "+ex.Message,"VectorDraw",MessageBoxButton.OK,MessageBoxImage.Error);}
+            GridCheck.IsChecked=p.Grid;NamesCheck.IsChecked=p.Names;ComponentsCheck.IsChecked=p.ComponentsVisible;GuidesCheck.IsChecked=p.GuidesVisible;RememberProject(filename);Render();Status.Text=I18n.T("Progetto caricato.");
+        }catch(Exception ex){MessageBox.Show(I18n.T("Impossibile aprire il progetto: ")+ex.Message,"VectorDraw",MessageBoxButton.OK,MessageBoxImage.Error);}
     }
 }
